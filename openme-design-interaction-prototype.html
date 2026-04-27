@@ -5923,4 +5923,105 @@
 
         if (!nearest) return;
 
-       
+        if (!leiActiveKey && nearest.distance < 106) {
+          setLeiActive(nearest.key);
+          return;
+        }
+
+        const current = leiTargets.find((target) => target.key === leiActiveKey);
+        const currentDistance = current ? Math.hypot(x - current.x, y - current.y) : Infinity;
+        const hasClearerTarget = nearest.key !== leiActiveKey
+          && nearest.distance < 92
+          && nearest.distance + 18 < currentDistance;
+
+        if (hasClearerTarget) {
+          setLeiActive(nearest.key);
+        }
+      }
+
+      function enterLeiKeyboardMode() {
+        leiPressing = false;
+        clearLeiTimers();
+        resetLeiSelection();
+        leiComment.classList.add("editing");
+        leiPress.textContent = "按住";
+        leiHint.textContent = "我准备好了...";
+        setLeiStage("keyboard");
+      }
+
+      function enterLeiGenerateMode() {
+        clearLeiTimers();
+        resetLeiSelection();
+        leiComment.classList.remove("editing");
+        leiPress.textContent = "按住";
+        leiHint.textContent = "我准备好了...";
+        setLeiStage("idle");
+      }
+
+      function ensureLeiEditableText() {
+        if (!leiComment.classList.contains("ready")) {
+          leiComment.textContent = "";
+          leiComment.classList.add("ready");
+        }
+      }
+
+      function syncLeiSendState() {
+        const hasText = leiComment.textContent.trim().length > 0 && leiComment.textContent !== leiPlaceholder;
+        leiSend.classList.toggle("ready", hasText);
+        if (!hasText) {
+          leiComment.classList.remove("ready");
+          leiComment.textContent = leiPlaceholder;
+        }
+      }
+
+      function editLeiComment(key) {
+        ensureLeiEditableText();
+        if (key === "backspace") {
+          leiComment.textContent = leiComment.textContent.slice(0, -1);
+        } else if (key === "space") {
+          leiComment.textContent += " ";
+        } else if (key === "shift") {
+          leiComment.textContent += "";
+        } else {
+          leiComment.textContent += key;
+        }
+        syncLeiSendState();
+        if (leiComment.classList.contains("ready")) {
+          leiComment.classList.add("editing");
+        }
+      }
+
+      leiPress.addEventListener("pointerdown", startLeiPress);
+      leiPress.addEventListener("pointermove", chooseLeiByPointer);
+      leiPress.addEventListener("pointerup", endLeiPress);
+      leiPress.addEventListener("pointercancel", endLeiPress);
+      window.addEventListener("pointermove", chooseLeiByPointer);
+      window.addEventListener("pointerup", endLeiPress);
+      window.addEventListener("pointercancel", endLeiPress);
+
+      leiOptions.forEach((el) => {
+        el.addEventListener("pointerdown", (event) => {
+          startLeiPress(event);
+          setLeiActive(el.dataset.key);
+        });
+      });
+
+      leiComment.addEventListener("click", enterLeiKeyboardMode);
+      leiComment.addEventListener("focus", enterLeiKeyboardMode);
+      leiModeButton.addEventListener("click", () => {
+        if (leiPhone.classList.contains("case-state-keyboard")) {
+          enterLeiGenerateMode();
+        } else {
+          enterLeiKeyboardMode();
+        }
+      });
+      leiKeys.forEach((key) => {
+        key.addEventListener("click", () => editLeiComment(key.dataset.key));
+      });
+    }
+
+    initLeiCasePrototype();
+  </script>
+</body>
+</html>
+
