@@ -1,0 +1,5926 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenMe 交互原型</title>
+  <style>
+    :root {
+      --bg: #f7f5ee;
+      --paper: #fffdfa;
+      --ink: #17171d;
+      --muted: #71717a;
+      --line: #e7e2d8;
+      --accent: #7c3aed;
+      --accent-deep: #4c1d95;
+      --coral: #ff5a7a;
+      --sky: #2777df;
+      --mint: #14b879;
+      --amber: #ffb020;
+      --tone: #7c3aed;
+      --tone-deep: #4c1d95;
+      --tone-soft: rgba(124, 58, 237, .12);
+      --shadow: 0 24px 80px rgba(31, 25, 15, .16);
+      --soft-shadow: 0 12px 34px rgba(31, 25, 15, .11);
+      --phone-width: 410px;
+      --phone-height: 844px;
+      --phone-border: 10px;
+      --phone-radius: 46px;
+      --phone-inner-radius: 36px;
+      --composer-height: 122px;
+      --openme-height: 326px;
+      --post-media-height: 236px;
+      --interaction-arena-height: 236px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(135deg, rgba(39, 119, 223, .05), transparent 28%),
+        linear-gradient(315deg, rgba(20, 184, 121, .05), transparent 34%),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .page {
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .shell {
+      width: min(1440px, calc(100vw - 48px));
+      margin: 0 auto;
+    }
+
+    .cold-start {
+      padding: 34px 0 56px;
+    }
+
+    .boot-app {
+      overflow: hidden;
+      border: 1px solid rgba(39, 39, 42, .08);
+      border-radius: 32px;
+      background:
+        linear-gradient(135deg, rgba(255, 90, 122, .08), transparent 31%),
+        linear-gradient(315deg, rgba(20, 184, 121, .07), transparent 36%),
+        rgba(255, 255, 255, .82);
+      box-shadow: var(--shadow);
+    }
+
+    .boot-topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
+      align-items: center;
+      padding: 22px 26px;
+      border-bottom: 1px solid rgba(39, 39, 42, .08);
+      background: rgba(255, 255, 255, .72);
+    }
+
+    .boot-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      color: #17171d;
+      font-weight: 950;
+    }
+
+    .boot-logo {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: linear-gradient(160deg, #7c3aed, #2777df);
+      color: white;
+      font-size: 18px;
+      box-shadow: 0 10px 24px rgba(124, 58, 237, .18);
+    }
+
+    .boot-brand span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 16px;
+    }
+
+    .boot-progress {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .boot-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 1px solid rgba(39, 39, 42, .08);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .8);
+      color: #71717a;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .boot-step.is-active {
+      border-color: rgba(124, 58, 237, .22);
+      background: #f5f3ff;
+      color: var(--accent);
+    }
+
+    .boot-stage {
+      min-height: 720px;
+      padding: 28px;
+    }
+
+    .boot-stage[hidden] {
+      display: none;
+    }
+
+    .boot-stage-title {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .boot-stage-copy {
+      margin: 12px 0 0;
+      color: #52525b;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .boot-primary,
+    .boot-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .boot-primary {
+      border: 0;
+      background: #17171d;
+      color: white;
+      box-shadow: 0 14px 28px rgba(23, 23, 29, .14);
+    }
+
+    .boot-secondary {
+      border: 1px solid rgba(39, 39, 42, .12);
+      background: rgba(255, 255, 255, .78);
+      color: #34343c;
+    }
+
+    .boot-scene-grid,
+    .boot-result-grid,
+    .boot-live-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+      gap: 32px;
+      align-items: center;
+      min-height: 660px;
+    }
+
+    .boot-hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .boot-principle {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      margin-top: 22px;
+      padding: 8px 12px;
+      border: 1px solid rgba(124, 58, 237, .18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .74);
+      color: var(--accent-deep);
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .boot-phone-demo,
+    .boot-live-phone {
+      position: relative;
+      width: min(100%, 410px);
+      height: 690px;
+      overflow: hidden;
+      border: 10px solid #111116;
+      border-radius: 44px;
+      background: #101017;
+      box-shadow: 0 24px 64px rgba(23, 23, 29, .18);
+      isolation: isolate;
+    }
+
+    .boot-phone-demo::before,
+    .boot-live-phone::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 34px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+      pointer-events: none;
+      z-index: 9;
+    }
+
+    .boot-phone-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 38px;
+      padding: 0 26px;
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+      background: rgba(16, 16, 23, .96);
+      position: relative;
+      z-index: 2;
+    }
+
+    .boot-phone-battery {
+      width: 22px;
+      height: 12px;
+      border-radius: 4px;
+      background: white;
+    }
+
+    .boot-social-head {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 48px;
+      padding: 0 16px;
+      color: white;
+      background: rgba(16, 16, 23, .96);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .boot-social-avatar {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #ffd7dd;
+      color: #e11d48;
+      font-weight: 950;
+    }
+
+    .boot-social-image {
+      height: 276px;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, .02), rgba(0, 0, 0, .35)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02112_b9d0e9bc-58bb-48ee-9f7f-8eef755617fg.jpg") center 16% / cover;
+    }
+
+    .boot-social-copy {
+      padding: 14px 16px;
+      color: #e5e7eb;
+      background: #101017;
+    }
+
+    .boot-social-copy strong,
+    .boot-social-copy span {
+      display: block;
+    }
+
+    .boot-social-copy strong {
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .boot-social-copy span {
+      margin-top: 7px;
+      color: #c7c7d1;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .boot-comment-area {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 184px;
+      padding: 12px 16px;
+      background: rgba(16, 16, 23, .96);
+      border-top: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .boot-comment-box {
+      min-height: 40px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .08);
+      color: #a1a1aa;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .boot-comment-box.is-filled {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, .13);
+    }
+
+    .boot-keyboard-preview {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 184px;
+      padding: 14px 16px 16px;
+      background:
+        radial-gradient(circle at 50% 70%, rgba(124, 58, 237, .12), transparent 38%),
+        #ffffff;
+    }
+
+    .boot-keyboard-head {
+      display: flex;
+      justify-content: space-between;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .boot-demo-arena {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      height: 124px;
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .boot-demo-press {
+      position: absolute;
+      left: 50%;
+      bottom: 6px;
+      display: grid;
+      place-items: center;
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: linear-gradient(160deg, #9917ff, #2777df);
+      color: white;
+      font-size: 13px;
+      font-weight: 950;
+      transform: translateX(-50%);
+      box-shadow: 0 16px 32px rgba(124, 58, 237, .24);
+      animation: bootPressLoop 2.6s ease-in-out infinite;
+    }
+
+    .boot-demo-option {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 10px 22px rgba(39, 39, 42, .12);
+      font-size: 22px;
+      opacity: 0;
+      animation: bootOptionLoop 2.6s ease-in-out infinite;
+    }
+
+    .boot-demo-option:nth-child(1) { left: 50%; top: 6px; transform: translateX(-50%); }
+    .boot-demo-option:nth-child(2) { left: 18%; top: 52px; animation-delay: .1s; }
+    .boot-demo-option:nth-child(3) { right: 18%; top: 52px; animation-delay: .2s; }
+
+    .boot-demo-finger {
+      position: absolute;
+      left: 50%;
+      bottom: 34px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .96);
+      box-shadow: 0 8px 22px rgba(23, 23, 29, .2);
+      transform: translateX(-50%);
+      animation: bootFingerLoop 2.6s ease-in-out infinite;
+      z-index: 4;
+    }
+
+    .boot-demo-gen {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 48px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid rgba(124, 58, 237, .18);
+      border-radius: 13px;
+      background: white;
+      color: #27272a;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 900;
+      opacity: 0;
+      animation: bootGenLoop 2.6s ease-in-out infinite;
+      z-index: 3;
+    }
+
+    @keyframes bootPressLoop {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      28%, 74% { transform: translateX(-50%) scale(.9); }
+    }
+
+    @keyframes bootOptionLoop {
+      0%, 18%, 100% { opacity: 0; transform: translateX(-50%) scale(.82); }
+      32%, 78% { opacity: 1; }
+    }
+
+    @keyframes bootFingerLoop {
+      0%, 18%, 100% { transform: translateX(-50%) translate(0, 0) scale(1); opacity: 0; }
+      26% { opacity: 1; }
+      58%, 76% { transform: translateX(-50%) translate(0, -88px) scale(.92); opacity: 1; }
+    }
+
+    @keyframes bootGenLoop {
+      0%, 52%, 100% { opacity: 0; transform: translateY(8px); }
+      62%, 86% { opacity: 1; transform: translateY(0); }
+    }
+
+    .boot-quiz-grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      gap: 28px;
+      min-height: 660px;
+      align-items: stretch;
+    }
+
+    .boot-quiz-panel,
+    .boot-scenario-panel,
+    .boot-persona-card,
+    .boot-live-guide {
+      border: 1px solid rgba(39, 39, 42, .08);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .78);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .boot-quiz-panel {
+      padding: 24px;
+    }
+
+    .boot-quiz-count {
+      display: inline-flex;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #2777df;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .boot-quiz-question {
+      margin-top: 20px;
+    }
+
+    .boot-quiz-question h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .boot-quiz-question p {
+      margin: 12px 0 0;
+      color: #52525b;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .boot-dimension-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .boot-dimension {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: #71717a;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .boot-dimension span:last-child {
+      color: #27272a;
+      font-weight: 950;
+    }
+
+    .boot-scenario-panel {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    .boot-scenario-card {
+      padding: 24px;
+      border-bottom: 1px solid rgba(39, 39, 42, .08);
+      background:
+        linear-gradient(135deg, rgba(39, 119, 223, .08), transparent 34%),
+        rgba(255, 255, 255, .72);
+    }
+
+    .boot-scenario-tag {
+      display: inline-flex;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #ea580c;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .boot-scenario-card h3 {
+      margin: 14px 0 0;
+      font-size: 24px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+
+    .boot-scenario-card p {
+      margin: 12px 0 0;
+      color: #52525b;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .boot-options {
+      display: grid;
+      gap: 12px;
+      padding: 20px 24px 24px;
+    }
+
+    .boot-option {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      min-height: 74px;
+      padding: 14px;
+      border: 1px solid rgba(39, 39, 42, .08);
+      border-radius: 18px;
+      background: white;
+      color: #27272a;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .boot-option:hover,
+    .boot-option.is-selected {
+      border-color: rgba(124, 58, 237, .26);
+      box-shadow: 0 12px 28px rgba(124, 58, 237, .1);
+      transform: translateY(-1px);
+    }
+
+    .boot-option-index {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background: #f4f4f5;
+      color: #52525b;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .boot-option.is-selected .boot-option-index {
+      background: var(--accent);
+      color: white;
+    }
+
+    .boot-option strong,
+    .boot-option span {
+      display: block;
+    }
+
+    .boot-option strong {
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .boot-option span {
+      margin-top: 4px;
+      color: #71717a;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+    .boot-persona-card {
+      padding: 28px;
+    }
+
+    .boot-code {
+      display: inline-grid;
+      place-items: center;
+      min-width: 92px;
+      min-height: 48px;
+      padding: 8px 12px;
+      border-radius: 16px;
+      background: #17171d;
+      color: white;
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: 1px;
+    }
+
+    .boot-persona-card h2 {
+      margin: 18px 0 0;
+      font-size: 34px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .boot-persona-card p {
+      margin: 14px 0 0;
+      color: #52525b;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .boot-persona-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .boot-meta-item {
+      min-height: 86px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #f8fafc;
+    }
+
+    .boot-meta-item strong,
+    .boot-meta-item span {
+      display: block;
+    }
+
+    .boot-meta-item strong {
+      color: #27272a;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .boot-meta-item span {
+      margin-top: 8px;
+      color: #71717a;
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .boot-result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .boot-live-guide {
+      padding: 24px;
+    }
+
+    .boot-live-guide h2 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .boot-live-guide p {
+      margin: 12px 0 0;
+      color: #52525b;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .boot-live-steps {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .boot-live-step {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      color: #52525b;
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 850;
+    }
+
+    .boot-live-step i {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-style: normal;
+      font-weight: 950;
+    }
+
+    .boot-live-complete {
+      display: none;
+      margin-top: 24px;
+      padding: 16px;
+      border: 1px solid rgba(20, 184, 121, .22);
+      border-radius: 18px;
+      background: rgba(20, 184, 121, .08);
+      color: #047857;
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 900;
+    }
+
+    .boot-live-complete.is-visible {
+      display: block;
+    }
+
+    .boot-live-phone {
+      background: #fafafa;
+      border-color: #fff;
+    }
+
+    .boot-live-phone .boot-phone-status,
+    .boot-live-phone .boot-social-head {
+      background: rgba(250, 250, 250, .96);
+      color: #17171d;
+    }
+
+    .boot-live-phone .boot-phone-battery {
+      background: #17171d;
+    }
+
+    .boot-live-card-image {
+      height: 234px;
+      margin: 0 16px;
+      overflow: hidden;
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, .02), rgba(0, 0, 0, .28)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02113_8c252500-6928-4695-852b-0bcb5b4269cg.jpg") center 18% / cover;
+    }
+
+    .boot-live-caption {
+      padding: 14px 16px 0;
+    }
+
+    .boot-live-caption strong,
+    .boot-live-caption span {
+      display: block;
+    }
+
+    .boot-live-caption strong {
+      color: #27272a;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .boot-live-caption span {
+      margin-top: 7px;
+      color: #71717a;
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .boot-live-composer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 16px 16px;
+      border-top: 1px solid rgba(231, 226, 216, .72);
+      background: rgba(255, 255, 255, .96);
+      transition: bottom .24s ease;
+      z-index: 5;
+    }
+
+    .boot-live-input {
+      min-height: 42px;
+      padding: 11px 12px;
+      border-radius: 15px;
+      background: #f1f1f3;
+      color: #a1a1aa;
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .boot-live-input.is-filled {
+      color: #27272a;
+      background: #fff2f5;
+    }
+
+    .boot-live-tools {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 10px;
+      color: #52525b;
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .boot-live-send {
+      margin-left: auto;
+      min-width: 58px;
+      height: 32px;
+      border: 0;
+      border-radius: 999px;
+      background: #ffc0cf;
+      color: white;
+      font-size: 13px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .boot-live-send.is-ready {
+      background: var(--coral);
+    }
+
+    .boot-live-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 326px;
+      padding: 14px 18px 18px;
+      border-top: 1px solid rgba(226, 220, 245, .72);
+      background:
+        radial-gradient(circle at 50% 72%, rgba(124, 58, 237, .08), transparent 36%),
+        linear-gradient(180deg, #ffffff 0%, #fdfcff 58%, #ffffff 100%);
+      transform: translateY(100%);
+      transition: transform .24s ease;
+      z-index: 6;
+    }
+
+    .boot-live-phone.is-panel-visible .boot-live-composer {
+      bottom: 326px;
+    }
+
+    .boot-live-phone.is-panel-visible .boot-live-panel {
+      transform: translateY(0);
+    }
+
+    .boot-live-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .boot-use-hint {
+      position: absolute;
+      left: 50%;
+      top: 58px;
+      max-width: min(82%, 280px);
+      min-height: 28px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #f5f3ff;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 950;
+      text-align: center;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    .boot-live-generated {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 94px;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid rgba(124, 58, 237, .18);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .96);
+      color: #27272a;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 900;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .boot-live-generated.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .boot-live-arena {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      height: 176px;
+      border-radius: 24px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 68%, rgba(124, 58, 237, .055), transparent 40%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .76));
+    }
+
+    .boot-live-options {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(.92);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .boot-live-phone.is-pressing .boot-live-options {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .boot-live-option {
+      position: absolute;
+      display: grid;
+      justify-items: center;
+      gap: 4px;
+      width: 78px;
+      color: #8a8a96;
+      font-size: 12px;
+      font-weight: 900;
+      transform: translate(-50%, -50%) scale(.9);
+      transition: transform .18s ease, opacity .18s ease, color .18s ease;
+    }
+
+    .boot-live-option span:first-child {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 8px 18px rgba(39, 39, 42, .1);
+      font-size: 25px;
+    }
+
+    .boot-live-option[data-key="agree"] { left: 50%; top: 46px; }
+    .boot-live-option[data-key="fun"] { left: 18%; top: 94px; }
+    .boot-live-option[data-key="ask"] { left: 82%; top: 94px; }
+
+    .boot-live-option.is-active {
+      color: var(--accent);
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.24);
+      z-index: 4;
+    }
+
+    .boot-live-press {
+      position: absolute;
+      left: 50%;
+      bottom: 6px;
+      display: grid;
+      place-items: center;
+      width: 98px;
+      height: 98px;
+      border: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .28), transparent 22%),
+        linear-gradient(160deg, #9917ff, #5c37f1 64%, #1724d6);
+      color: white;
+      font-size: 13px;
+      font-weight: 950;
+      box-shadow: 0 18px 36px rgba(92, 55, 241, .24);
+      transform: translateX(-50%);
+      cursor: pointer;
+      user-select: none;
+      touch-action: none;
+      z-index: 3;
+    }
+
+    @media (max-width: 980px) {
+      .boot-topbar {
+        grid-template-columns: 1fr;
+        padding: 18px;
+      }
+
+      .boot-progress {
+        justify-content: flex-start;
+      }
+
+      .boot-stage {
+        min-height: 0;
+        padding: 18px;
+      }
+
+      .boot-scene-grid,
+      .boot-result-grid,
+      .boot-live-grid,
+      .boot-quiz-grid {
+        grid-template-columns: 1fr;
+        min-height: 0;
+      }
+
+      .boot-stage-title {
+        font-size: 32px;
+      }
+
+      .boot-phone-demo,
+      .boot-live-phone {
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .cold-start {
+        padding-top: 18px;
+      }
+
+      .boot-app {
+        border-radius: 24px;
+      }
+
+      .boot-stage-title,
+      .boot-live-guide h2,
+      .boot-persona-card h2 {
+        font-size: 28px;
+      }
+
+      .boot-persona-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .boot-phone-demo,
+      .boot-live-phone {
+        height: 660px;
+      }
+
+      .boot-social-image {
+        height: 244px;
+      }
+
+      .boot-live-card-image {
+        height: 210px;
+      }
+    }
+
+    .keyboard-onboard {
+      position: relative;
+      width: min(100%, var(--phone-width));
+      height: var(--phone-height);
+      margin: 0 auto;
+      overflow: hidden;
+      border: var(--phone-border) solid #111116;
+      border-radius: var(--phone-radius);
+      background: #f8f8fb;
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+
+    .keyboard-onboard::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      border-radius: var(--phone-inner-radius);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1);
+      pointer-events: none;
+    }
+
+    .onboard-status {
+      position: relative;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 42px;
+      padding: 0 28px;
+      background: rgba(17, 17, 22, .98);
+      color: #f4f4f5;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .onboard-battery {
+      width: 22px;
+      height: 12px;
+      border-radius: 4px;
+      background: #f4f4f5;
+    }
+
+    .onboard-top {
+      position: relative;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+      padding: 0 18px;
+      background: rgba(17, 17, 22, .98);
+      color: white;
+    }
+
+    .onboard-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .onboard-brand .spark {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 9px;
+      background: linear-gradient(160deg, #7c3aed, #2777df);
+      color: white;
+      font-size: 14px;
+    }
+
+    .onboard-step {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 5px 10px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 999px;
+      color: #d8d8df;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .onboard-screens {
+      position: absolute;
+      inset: 94px 0 0;
+      overflow: hidden;
+      background: #fafafa;
+    }
+
+    .onboard-screen {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #fafafa;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateX(16px);
+      transition: opacity .26s ease, transform .26s ease, visibility .26s ease;
+    }
+
+    .onboard-screen.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .onboard-scroll {
+      height: 100%;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .onboard-card {
+      border: 1px solid rgba(39, 39, 42, .08);
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 14px 34px rgba(39, 39, 42, .08);
+      overflow: hidden;
+    }
+
+    .onboard-scene-simple {
+      display: grid;
+      align-content: center;
+      height: 100%;
+      padding: 24px 18px;
+      background:
+        radial-gradient(circle at 50% 28%, rgba(124, 58, 237, .1), transparent 28%),
+        linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    }
+
+    .onboard-feed-card {
+      position: relative;
+      min-height: 0;
+      margin: 0;
+    }
+
+    .onboard-feed-media,
+    .onboard-quiz-media,
+    .onboard-use-image {
+      background-color: #1e293b;
+      background-position: center;
+      background-size: cover;
+    }
+
+    .onboard-feed-media {
+      height: 252px;
+      background-image:
+        linear-gradient(180deg, rgba(15, 23, 42, .02), rgba(15, 23, 42, .18)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02112_b9d0e9bc-58bb-48ee-9f7f-8eef755617fg.jpg");
+      background-position: center 18%;
+    }
+
+    .onboard-feed-copy,
+    .onboard-quiz-copy {
+      padding: 13px 14px 15px;
+    }
+
+    .onboard-feed-copy strong,
+    .onboard-quiz-copy strong,
+    .onboard-use-copy strong {
+      display: block;
+      color: #17171d;
+      font-size: 17px;
+      line-height: 1.35;
+      font-weight: 950;
+    }
+
+    .onboard-scene-simple .onboard-feed-media {
+      height: 100%;
+    }
+
+    .onboard-scene-simple .onboard-feed-copy {
+      display: none;
+    }
+
+    .onboard-feed-copy span,
+    .onboard-quiz-copy span,
+    .onboard-use-copy span {
+      display: block;
+      margin-top: 6px;
+      color: #71717a;
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .onboard-scene-prompt {
+      position: relative;
+      z-index: 3;
+      display: grid;
+      gap: 18px;
+      padding: 28px 22px;
+      border: 1px solid rgba(39, 39, 42, .06);
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 18px 42px rgba(23, 23, 29, .08);
+    }
+
+    .onboard-scene-prompt h1 {
+      margin: 0;
+      color: #52525b;
+      font-size: 22px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .onboard-scene-prompt p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 16px;
+      line-height: 1.45;
+      font-weight: 850;
+    }
+
+    .onboard-slogan {
+      display: block;
+      width: 100%;
+      padding: 18px 18px 17px;
+      border-radius: 22px;
+      background: #17171d;
+      color: #ffffff;
+      font-size: 29px;
+      line-height: 1.12;
+      font-weight: 950;
+      box-shadow: 0 16px 32px rgba(23, 23, 29, .18);
+    }
+
+    .onboard-actions {
+      display: grid;
+      margin-top: 4px;
+    }
+
+    .onboard-primary,
+    .onboard-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .onboard-primary {
+      border: 0;
+      background: #17171d;
+      color: white;
+    }
+
+    .onboard-scene-prompt .onboard-primary {
+      min-height: 48px;
+      width: 100%;
+      font-size: 15px;
+    }
+
+    .onboard-secondary {
+      border: 1px solid rgba(39, 39, 42, .12);
+      background: rgba(255, 255, 255, .84);
+      color: #34343c;
+    }
+
+    .onboard-keyboard-demo {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--openme-height);
+      padding: 14px 18px 18px;
+      border-top: 1px solid rgba(231, 226, 216, .22);
+      background:
+        radial-gradient(circle at 50% 76%, rgba(124, 58, 237, .1), transparent 38%),
+        linear-gradient(180deg, #ffffff 0%, #fefcff 56%, #ffffff 100%);
+      box-shadow: 0 -14px 34px rgba(39, 39, 42, .1);
+    }
+
+    .onboard-keyboard-head,
+    .onboard-use-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #7c3aed;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .onboard-demo-gen {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 58px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid rgba(124, 58, 237, .2);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .94);
+      color: #27272a;
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(124, 58, 237, .1);
+    }
+
+    .onboard-demo-arena {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      height: 214px;
+      border-radius: 26px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 70%, rgba(124, 58, 237, .08), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .78));
+    }
+
+    .onboard-demo-option {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 8px 18px rgba(39, 39, 42, .1);
+      font-size: 26px;
+    }
+
+    .onboard-demo-option:nth-child(1) { left: 50%; top: 46px; transform: translate(-50%, -50%); }
+    .onboard-demo-option:nth-child(2) { left: 18%; top: 92px; transform: translate(-50%, -50%); }
+    .onboard-demo-option:nth-child(3) { left: 82%; top: 92px; transform: translate(-50%, -50%); }
+
+    .onboard-demo-press {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      display: grid;
+      place-items: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .3), transparent 22%),
+        linear-gradient(160deg, #9917ff, #5c37f1 64%, #1724d6);
+      color: white;
+      font-size: 14px;
+      font-weight: 950;
+      box-shadow: 0 18px 36px rgba(92, 55, 241, .24);
+      transform: translateX(-50%);
+      animation: pressBreath 2.6s ease-in-out infinite;
+    }
+
+    .onboard-demo-finger {
+      position: absolute;
+      left: 50%;
+      bottom: 46px;
+      width: 30px;
+      height: 38px;
+      border-radius: 16px 16px 18px 18px;
+      background: linear-gradient(180deg, #ffe0c4, #f4ad81);
+      box-shadow: 0 10px 24px rgba(39, 39, 42, .18);
+      transform: translateX(-50%);
+      animation: onboardFinger 3s ease-in-out infinite;
+    }
+
+    @keyframes onboardFinger {
+      0%, 18%, 100% { transform: translate(-50%, 0) scale(1); }
+      42%, 58% { transform: translate(-138px, -88px) scale(.96); }
+      76% { transform: translate(138px, -88px) scale(.96); }
+    }
+
+    .onboard-quiz-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .onboard-quiz-title h2,
+    .onboard-persona-card h2 {
+      margin: 0;
+      color: #17171d;
+      font-size: 22px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .onboard-quiz-title p,
+    .onboard-persona-card p {
+      margin: 6px 0 0;
+      color: #71717a;
+      font-size: 13px;
+      line-height: 1.52;
+      font-weight: 760;
+    }
+
+    .onboard-quiz-count {
+      flex: 0 0 auto;
+      min-width: 52px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f5f3ff;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .onboard-quiz-media {
+      position: relative;
+      height: 188px;
+      border-radius: 20px 20px 0 0;
+      overflow: hidden;
+    }
+
+    .onboard-quiz-media::after,
+    .onboard-use-image::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(15, 23, 42, .02), rgba(15, 23, 42, .56));
+    }
+
+    .onboard-quiz-media.visual-fan {
+      background-image:
+        linear-gradient(180deg, rgba(15, 23, 42, .04), rgba(15, 23, 42, .18)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02112_b9d0e9bc-58bb-48ee-9f7f-8eef755617fg.jpg");
+      background-position: center 18%;
+    }
+
+    .onboard-quiz-media.visual-funny {
+      background:
+        radial-gradient(circle at 76% 24%, rgba(255, 255, 255, .7), transparent 13%),
+        radial-gradient(circle at 26% 66%, rgba(255, 176, 32, .42), transparent 18%),
+        linear-gradient(135deg, #f87171, #fbbf24 48%, #22c55e);
+    }
+
+    .onboard-quiz-media.visual-knowledge {
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, .82) 0 44%, transparent 44%),
+        radial-gradient(circle at 72% 32%, rgba(39, 119, 223, .42), transparent 20%),
+        linear-gradient(135deg, #dbeafe, #f8fafc 48%, #ccfbf1);
+    }
+
+    .onboard-quiz-media.visual-news {
+      background-image:
+        linear-gradient(180deg, rgba(15, 23, 42, .02), rgba(15, 23, 42, .22)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02113_8c252500-6928-4695-852b-0bcb5b4269cg.jpg");
+      background-position: center 18%;
+    }
+
+    .onboard-quiz-media.visual-emotion {
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .72), transparent 16%),
+        radial-gradient(circle at 32% 70%, rgba(244, 114, 182, .38), transparent 18%),
+        linear-gradient(135deg, #fb7185, #c084fc 52%, #60a5fa);
+    }
+
+    .onboard-media-badge,
+    .onboard-media-caption {
+      position: absolute;
+      z-index: 2;
+      left: 14px;
+      right: 14px;
+      color: white;
+      text-shadow: 0 2px 10px rgba(15, 23, 42, .35);
+    }
+
+    .onboard-media-badge {
+      top: 12px;
+      display: inline-flex;
+      width: fit-content;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .44);
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .onboard-media-caption {
+      bottom: 13px;
+      font-size: 17px;
+      line-height: 1.28;
+      font-weight: 950;
+    }
+
+    .onboard-options {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .onboard-option {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 9px;
+      width: 100%;
+      min-height: 58px;
+      padding: 9px 10px;
+      border: 1px solid rgba(39, 39, 42, .08);
+      border-radius: 16px;
+      background: white;
+      color: #27272a;
+      text-align: left;
+      box-shadow: 0 8px 18px rgba(39, 39, 42, .06);
+      cursor: pointer;
+    }
+
+    .onboard-option-index {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background: #f4f4f5;
+      color: #52525b;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .onboard-option strong,
+    .onboard-option span span {
+      display: block;
+    }
+
+    .onboard-option strong {
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 950;
+    }
+
+    .onboard-option span span {
+      margin-top: 4px;
+      color: #71717a;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .onboard-option.is-selected {
+      border-color: rgba(124, 58, 237, .34);
+      background: #f5f3ff;
+      box-shadow: 0 12px 24px rgba(124, 58, 237, .12);
+    }
+
+    .onboard-option.is-selected .onboard-option-index {
+      background: var(--accent);
+      color: white;
+    }
+
+    .onboard-persona-card {
+      display: grid;
+      gap: 13px;
+      padding: 18px;
+    }
+
+    .onboard-code {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 48px;
+      padding: 8px 14px;
+      border-radius: 16px;
+      background: linear-gradient(160deg, #7c3aed, #2777df);
+      color: white;
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: 2px;
+    }
+
+    .onboard-persona-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .onboard-meta-item {
+      min-height: 82px;
+      padding: 11px;
+      border: 1px solid rgba(124, 58, 237, .12);
+      border-radius: 16px;
+      background: #f8f7ff;
+    }
+
+    .onboard-meta-item strong,
+    .onboard-meta-item span {
+      display: block;
+    }
+
+    .onboard-meta-item strong {
+      color: #4c1d95;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .onboard-meta-item span {
+      margin-top: 6px;
+      color: #52525b;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 800;
+    }
+
+    .onboard-result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .onboard-use-phone {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #16161d;
+    }
+
+    .onboard-use-content {
+      position: absolute;
+      inset: 0 0 0;
+      overflow: hidden;
+      color: white;
+      transition: transform .24s ease;
+    }
+
+    .onboard-use-image {
+      position: relative;
+      height: 256px;
+      background-image:
+        linear-gradient(180deg, rgba(15, 23, 42, .02), rgba(15, 23, 42, .22)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02113_8c252500-6928-4695-852b-0bcb5b4269cg.jpg");
+      background-position: center 18%;
+    }
+
+    .onboard-use-copy {
+      padding: 14px 16px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+    }
+
+    .onboard-use-copy strong {
+      color: #f8fafc;
+    }
+
+    .onboard-use-copy span {
+      color: #c7c7d1;
+    }
+
+    .onboard-use-callout {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 138px;
+      z-index: 6;
+      padding: 10px 12px;
+      border: 1px solid rgba(124, 58, 237, .22);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .94);
+      color: #4c1d95;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 950;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, .14);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .onboard-use-phone.is-panel-visible .onboard-use-callout {
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+    }
+
+    .onboard-use-composer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 13px;
+      height: var(--composer-height);
+      padding: 14px 18px 10px;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(22, 22, 29, .96);
+      color: #e5e7eb;
+      backdrop-filter: blur(14px);
+      transition: bottom .26s ease;
+    }
+
+    .onboard-use-phone.is-panel-visible .onboard-use-composer {
+      bottom: var(--openme-height);
+    }
+
+    .onboard-use-input {
+      flex: 1 1 100%;
+      min-height: 34px;
+      max-height: 66px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .08);
+      color: #a1a1aa;
+      font-size: 13px;
+      line-height: 1.45;
+      overflow: auto;
+      cursor: text;
+    }
+
+    .onboard-use-input.ready {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, .12);
+    }
+
+    .onboard-use-tools {
+      display: inline-flex;
+      gap: 14px;
+      color: #d8d8df;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .onboard-use-send {
+      margin-left: auto;
+      min-width: 52px;
+      height: 30px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 51, 95, .45);
+      color: white;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .onboard-use-send.is-ready {
+      background: #ff335f;
+      cursor: pointer;
+    }
+
+    .onboard-use-openme {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 7;
+      height: var(--openme-height);
+      padding: 14px 18px 18px;
+      border-top: 1px solid rgba(231, 226, 216, .22);
+      background:
+        radial-gradient(circle at 50% 76%, rgba(255, 122, 26, .08), transparent 38%),
+        linear-gradient(180deg, #ffffff 0%, #fefcff 56%, #ffffff 100%);
+      box-shadow: 0 -14px 34px rgba(39, 39, 42, .14);
+      transform: translateY(100%);
+      transition: transform .26s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .onboard-use-phone.is-panel-visible .onboard-use-openme {
+      transform: translateY(0);
+    }
+
+    .onboard-use-generated {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 58px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 122, 26, .24);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .94);
+      box-shadow: 0 10px 24px rgba(255, 122, 26, .1);
+      color: #27272a;
+      opacity: 0;
+      transform: translateY(8px) scale(.98);
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+      z-index: 4;
+    }
+
+    .onboard-use-generated.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      animation: cardSettle .34s ease both;
+    }
+
+    .onboard-use-generated b {
+      color: #ea580c;
+    }
+
+    .onboard-use-generated span {
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .onboard-use-barrage {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 108px;
+      z-index: 4;
+      height: 112px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .onboard-use-chip {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 10px;
+      border: 1px solid rgba(255, 122, 26, .2);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .94);
+      color: #27272a;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: 0 10px 24px rgba(255, 122, 26, .12);
+      opacity: 0;
+      transform: translate(-50%, 20px) scale(.8);
+      animation: barrageFly 1.05s cubic-bezier(.16, 1, .3, 1) both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .onboard-use-arena {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      height: var(--interaction-arena-height);
+      border-radius: 26px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 70%, rgba(255, 122, 26, .08), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .78));
+    }
+
+    .onboard-use-hint {
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      max-width: 78%;
+      padding: 0 10px;
+      border: 1px solid rgba(255, 122, 26, .15);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .84);
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .onboard-use-options {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(.92);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .onboard-use-option {
+      position: absolute;
+      display: grid;
+      justify-items: center;
+      gap: 5px;
+      width: 78px;
+      color: #8a8a96;
+      font-size: 12px;
+      font-weight: 900;
+      opacity: .88;
+      transform: translate(-50%, -50%) scale(.9);
+      transition: opacity .2s ease, transform .2s ease, color .2s ease;
+      will-change: transform, opacity;
+    }
+
+    .onboard-use-option .face {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 8px 18px rgba(39, 39, 42, .1);
+      font-size: 26px;
+    }
+
+    .onboard-use-option[data-key="score"] { left: 50%; top: 72px; }
+    .onboard-use-option[data-key="fun"] { left: 18%; top: 112px; }
+    .onboard-use-option[data-key="view"] { left: 82%; top: 112px; }
+    .onboard-use-option[data-key="ask"] { left: 18%; top: 190px; }
+    .onboard-use-option[data-key="support"] { left: 82%; top: 190px; }
+
+    .onboard-use-option.is-active {
+      color: #ea580c;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.26);
+      z-index: 4;
+    }
+
+    .onboard-use-option.is-active .face {
+      animation: facePop .32s cubic-bezier(.2, 1.35, .35, 1) both;
+    }
+
+    .onboard-use-press {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      width: 116px;
+      height: 116px;
+      border: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .3), transparent 22%),
+        linear-gradient(160deg, #ff8a1f, #7c3aed 66%, #1724d6);
+      color: white;
+      font-size: 14px;
+      font-weight: 950;
+      box-shadow:
+        0 18px 34px rgba(255, 122, 26, .2),
+        0 0 38px rgba(124, 58, 237, .12);
+      transform: translateX(-50%);
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    .use-state-idle .onboard-use-press {
+      animation: pressBreath 2.6s ease-in-out infinite;
+    }
+
+    .use-state-orbit .onboard-use-options,
+    .use-state-focus .onboard-use-options,
+    .use-state-generate .onboard-use-options {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .use-state-orbit .onboard-use-option {
+      animation: attitudeEnter .42s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .use-state-orbit .onboard-use-option:nth-child(1) { animation-delay: .02s; }
+    .use-state-orbit .onboard-use-option:nth-child(2) { animation-delay: .06s; }
+    .use-state-orbit .onboard-use-option:nth-child(3) { animation-delay: .1s; }
+    .use-state-orbit .onboard-use-option:nth-child(4) { animation-delay: .14s; }
+    .use-state-orbit .onboard-use-option:nth-child(5) { animation-delay: .18s; }
+
+    .use-state-focus .onboard-use-option:not(.is-active),
+    .use-state-generate .onboard-use-option:not(.is-active) {
+      opacity: .24;
+      transform: translate(-50%, -50%) scale(.74);
+    }
+
+    .use-state-focus .onboard-use-hint,
+    .use-state-generate .onboard-use-hint {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-4px);
+      pointer-events: none;
+    }
+
+    .use-state-orbit .onboard-use-press,
+    .use-state-focus .onboard-use-press,
+    .use-state-generate .onboard-use-press {
+      animation: none;
+      transform: translateX(-50%) scale(.9);
+    }
+
+    .onboard-use-complete {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      align-content: center;
+      gap: 12px;
+      padding: 28px;
+      background: rgba(255, 255, 255, .94);
+      color: #17171d;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .24s ease, visibility .24s ease;
+    }
+
+    .onboard-use-complete.is-visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .onboard-use-complete h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .onboard-use-complete p {
+      margin: 0;
+      color: #52525b;
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 780;
+    }
+
+    @media (max-width: 480px) {
+      .keyboard-onboard {
+        width: min(100%, var(--phone-width));
+      }
+
+      .onboard-feed-card {
+        margin: 10px;
+      }
+
+      .onboard-scroll {
+        padding: 10px;
+      }
+    }
+
+    .main-band {
+      padding: 48px 0 40px;
+    }
+
+    .prototype-layout {
+      display: flex;
+      justify-content: center;
+      align-items: start;
+    }
+
+    .phone-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .phone {
+      position: relative;
+      width: min(100%, var(--phone-width));
+      height: var(--phone-height);
+      border: var(--phone-border) solid #fff;
+      border-radius: var(--phone-radius);
+      background: #fafafa;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .phone[data-tone="funny"] {
+      --tone: #ff4f91;
+      --tone-deep: #b41463;
+      --tone-soft: rgba(255, 79, 145, .16);
+    }
+
+    .phone[data-tone="shock"] {
+      --tone: #ff7a1a;
+      --tone-deep: #cf3f00;
+      --tone-soft: rgba(255, 122, 26, .18);
+    }
+
+    .phone[data-tone="team"] {
+      --tone: #8b5cf6;
+      --tone-deep: #4c1d95;
+      --tone-soft: rgba(139, 92, 246, .16);
+    }
+
+    .phone[data-tone="soft"] {
+      --tone: #12b981;
+      --tone-deep: #047857;
+      --tone-soft: rgba(18, 185, 129, .15);
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--phone-inner-radius);
+      box-shadow: inset 0 0 0 1px rgba(23, 23, 29, .06);
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 42px;
+      padding: 0 28px;
+      color: #15151a;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(250, 250, 250, .94);
+      backdrop-filter: blur(14px);
+      position: relative;
+      z-index: 3;
+    }
+
+    .battery {
+      width: 22px;
+      height: 12px;
+      border-radius: 4px;
+      background: #111;
+    }
+
+    .app-nav {
+      display: grid;
+      grid-template-columns: 34px 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      height: 52px;
+      padding: 0 18px;
+      background: rgba(250, 250, 250, .94);
+      backdrop-filter: blur(14px);
+      position: relative;
+      z-index: 3;
+    }
+
+    .back {
+      width: 30px;
+      height: 30px;
+      border: 0;
+      background: transparent;
+      font-size: 28px;
+      line-height: 1;
+      color: #27272a;
+      cursor: pointer;
+    }
+
+    .author {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #fbd3d9;
+      color: #ff335f;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .author-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .follow {
+      min-width: 62px;
+      height: 30px;
+      border: 1px solid rgba(255, 90, 122, .45);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .9);
+      color: var(--coral);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .share {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: #27272a;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .feed {
+      height: 368px;
+      padding: 0 18px;
+      background: #fafafa;
+    }
+
+    .media {
+      position: relative;
+      height: var(--post-media-height);
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, .08), rgba(0, 0, 0, .38)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02112_b9d0e9bc-58bb-48ee-9f7f-8eef755617fg.jpg") center 18% / cover;
+    }
+
+    .media-chip {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .58);
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .page-count {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .caption {
+      padding: 18px 0 0;
+    }
+
+    .caption h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .caption p {
+      margin: 8px 0 0;
+      color: #52525b;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-top: 13px;
+      color: #27272a;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .composer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: var(--openme-height);
+      height: var(--composer-height);
+      padding: 14px 18px 10px;
+      border-top: 1px solid rgba(231, 226, 216, .72);
+      border-bottom: 1px solid rgba(231, 226, 216, .72);
+      background: rgba(255, 255, 255, .95);
+      backdrop-filter: blur(18px);
+      z-index: 4;
+      transition: bottom .28s ease;
+    }
+
+    .comment-input {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 0 14px;
+      border-radius: 16px;
+      background: #f1f1f3;
+      color: #25252b;
+      font-size: 15px;
+      line-height: 1.45;
+      transition: background .22s ease, color .22s ease;
+      cursor: text;
+      outline: 0;
+    }
+
+    .comment-input.placeholder {
+      color: #a1a1aa;
+    }
+
+    .comment-input.editing {
+      align-items: flex-start;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      background: #ffffff;
+      box-shadow:
+        inset 0 0 0 1.5px rgba(124, 58, 237, .24),
+        0 4px 14px rgba(39, 39, 42, .06);
+    }
+
+    .comment-input.editing::after {
+      content: "";
+      display: inline-block;
+      width: 2px;
+      height: 20px;
+      margin-left: 3px;
+      background: var(--accent);
+      animation: blink 1s steps(2, start) infinite;
+    }
+
+    .composer-tools {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      height: 42px;
+      padding-top: 10px;
+    }
+
+    .tool-icon {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #5b5b63;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .send {
+      margin-left: auto;
+      min-width: 58px;
+      height: 32px;
+      border: 0;
+      border-radius: 999px;
+      background: #ffc0cf;
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background .2s ease;
+    }
+
+    .send.ready {
+      background: var(--coral);
+    }
+
+    .chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 4px;
+      overflow: hidden;
+    }
+
+    .mention {
+      flex: 0 0 auto;
+      height: 28px;
+      padding: 0 10px;
+      border: 1px solid rgba(39, 119, 223, .26);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--sky);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .emoji-chip {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fff5f2;
+      font-size: 18px;
+    }
+
+    .openme {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--openme-height);
+      padding: 14px 18px 18px;
+      border-top: 1px solid rgba(226, 220, 245, .72);
+      background:
+        radial-gradient(circle at 50% 72%, rgba(124, 58, 237, .08), transparent 36%),
+        linear-gradient(180deg, #ffffff 0%, #fdfcff 58%, #ffffff 100%);
+      z-index: 5;
+    }
+
+    .openme-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 34px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .spark {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      background: var(--accent);
+      color: white;
+      font-size: 14px;
+    }
+
+    .mode-btn {
+      min-width: 66px;
+      height: 30px;
+      border: 1px solid #e7e2d8;
+      border-radius: 999px;
+      background: white;
+      color: #484852;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 3px 12px rgba(39, 39, 42, .08);
+      cursor: pointer;
+    }
+
+    .keyboard-panel {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      display: grid;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .keyboard-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 24px;
+      color: #8a8a96;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .candidate-strip {
+      display: flex;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .candidate-strip span {
+      flex: 0 0 auto;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #f5f3ff;
+      color: #6d28d9;
+    }
+
+    .key-row {
+      display: grid;
+      gap: 5px;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+    }
+
+    .key-row.mid {
+      padding: 0 13px;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+    }
+
+    .key-row.bottom {
+      padding: 0 32px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .key-row.controls {
+      grid-template-columns: 1.1fr 1fr 4.4fr 1fr 1.4fr;
+    }
+
+    .key {
+      display: grid;
+      place-items: center;
+      height: 34px;
+      border: 0;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #27272a;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow:
+        0 1px 0 rgba(39, 39, 42, .12),
+        0 6px 14px rgba(39, 39, 42, .08);
+      cursor: pointer;
+    }
+
+    .key:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(39, 39, 42, .08);
+    }
+
+    .key.wide,
+    .key.action {
+      background: #ececf1;
+      color: #4b4b55;
+      font-size: 13px;
+    }
+
+    .key.space {
+      background: #ffffff;
+      color: #71717a;
+    }
+
+    .generation-card {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 58px;
+      display: block;
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid rgba(124, 58, 237, .22);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .92);
+      box-shadow: 0 8px 20px rgba(76, 29, 149, .08);
+      opacity: 0;
+      transform: translateY(8px) scale(.98);
+      transition: opacity .22s ease, transform .22s ease;
+      pointer-events: none;
+    }
+
+    .ai-output {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .voice-output {
+      display: none;
+      align-items: center;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    .generation-card.voice-mode {
+      border-color: rgba(91, 59, 239, .26);
+      background: rgba(255, 255, 255, .96);
+      box-shadow:
+        0 8px 20px rgba(76, 29, 149, .08),
+        inset 0 0 0 1px rgba(124, 58, 237, .05);
+    }
+
+    .generation-card.voice-mode .ai-output {
+      display: none;
+    }
+
+    .generation-card.voice-mode .voice-output {
+      display: grid;
+    }
+
+    .generation-card.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      animation: cardSettle .34s ease both;
+    }
+
+    .generation-card.emotion-hit {
+      border-color: color-mix(in srgb, var(--tone) 52%, white);
+      box-shadow:
+        0 10px 24px var(--tone-soft),
+        0 0 0 1px color-mix(in srgb, var(--tone) 18%, white),
+        inset 0 0 22px color-mix(in srgb, var(--tone) 8%, transparent);
+      animation: cardSettle .34s ease both, cardGlow 1.1s ease both;
+    }
+
+    .gen-label {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .gen-text {
+      flex: 1;
+      min-width: 0;
+      color: #27272a;
+      font-size: 14px;
+      line-height: 1.35;
+      font-weight: 700;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+
+    .voice-mic {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(160deg, #9917ff, #5c37f1);
+      color: white;
+      box-shadow: 0 8px 18px rgba(92, 55, 241, .18);
+    }
+
+    .voice-mic svg,
+    .voice-face svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .voice-copy {
+      min-width: 0;
+    }
+
+    .voice-copy strong,
+    .voice-copy span {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    .voice-copy strong {
+      color: var(--accent);
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .voice-copy span {
+      margin-top: 3px;
+      color: #27272a;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .voice-wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 24px;
+    }
+
+    .voice-wave i {
+      display: block;
+      width: 3px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      opacity: .68;
+      animation: voiceWave .82s ease-in-out infinite;
+    }
+
+    .voice-wave i:nth-child(2) { height: 15px; animation-delay: .08s; }
+    .voice-wave i:nth-child(3) { height: 21px; animation-delay: .16s; }
+    .voice-wave i:nth-child(4) { height: 13px; animation-delay: .24s; }
+    .voice-wave i:nth-child(5) { height: 18px; animation-delay: .32s; }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 16px;
+      margin-left: 2px;
+      transform: translateY(3px);
+      background: var(--accent);
+      animation: blink 1s steps(2, start) infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @keyframes cardSettle {
+      0% { transform: translateY(8px) scale(.98); }
+      68% { transform: translateY(-1px) scale(1.01); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes cardGlow {
+      0% { filter: saturate(1); }
+      24% { filter: saturate(1.16); }
+      100% { filter: saturate(1); }
+    }
+
+    @keyframes voiceWave {
+      0%, 100% { transform: scaleY(.62); opacity: .48; }
+      50% { transform: scaleY(1.16); opacity: 1; }
+    }
+
+    @keyframes rayHit {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) scaleY(.12);
+        filter: blur(4px);
+      }
+      24% {
+        opacity: .9;
+        transform: translateX(-50%) scaleY(1.04);
+        filter: blur(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-50%) scaleY(.72);
+      }
+    }
+
+    @keyframes barrageFly {
+      0% {
+        opacity: 0;
+        filter: blur(5px);
+        transform: translate(-50%, 28px) scale(.78) rotate(-2deg);
+      }
+      14% {
+        opacity: 1;
+        filter: blur(0);
+      }
+      58% {
+        opacity: 1;
+        transform: translate(calc(-50% + var(--dx, 0px)), var(--mid-dy, -54px)) scale(1.03) rotate(var(--rotate, 0deg));
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, -76px)) scale(.96) rotate(var(--rotate, 0deg));
+      }
+    }
+
+    .arena {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      height: var(--interaction-arena-height);
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at 50% 68%, rgba(124, 58, 237, .055), transparent 40%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .76));
+      overflow: hidden;
+    }
+
+    .emotion-ray {
+      position: absolute;
+      left: 50%;
+      top: 104px;
+      bottom: 102px;
+      width: 2px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, transparent, var(--tone), transparent);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) scaleY(.2);
+      transform-origin: bottom center;
+      z-index: 4;
+    }
+
+    .emotion-ray.active {
+      animation: rayHit .78s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .emotion-barrage {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 108px;
+      height: 112px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .barrage-chip {
+      position: absolute;
+      left: 50%;
+      bottom: 2px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      max-width: 210px;
+      padding: 5px 10px;
+      border: 1px solid color-mix(in srgb, var(--tone) 22%, white);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .92);
+      color: #27272a;
+      font-size: 12px;
+      line-height: 1.25;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow:
+        0 10px 24px var(--tone-soft),
+        inset 0 0 0 1px rgba(255, 255, 255, .62);
+      opacity: 0;
+      transform: translate(-50%, 26px) scale(.78);
+      animation: barrageFly 1.05s cubic-bezier(.16, 1, .3, 1) both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .barrage-chip::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      margin-right: 6px;
+      border-radius: 999px;
+      background: var(--tone);
+      box-shadow: 0 0 14px var(--tone);
+    }
+
+    .arena::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 32px;
+      width: 190px;
+      height: 190px;
+      border: 2px solid rgba(124, 58, 237, .1);
+      border-radius: 50%;
+      transform: translateX(-50%) scale(.8);
+      opacity: 0;
+      transition: transform .28s ease, opacity .28s ease;
+    }
+
+    .hint {
+      position: absolute;
+      left: 50%;
+      top: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      max-width: min(76%, 250px);
+      min-height: 24px;
+      padding: 0 10px;
+      border: 1px solid rgba(124, 58, 237, .1);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .78);
+      color: #a1a1aa;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      transition: color .25s ease, transform .25s ease, opacity .25s ease;
+      z-index: 2;
+    }
+
+    .selected-attitude {
+      position: absolute;
+      left: 50%;
+      top: 18px;
+      display: grid;
+      place-items: center;
+      width: 88px;
+      height: 88px;
+      border: 4px solid rgba(124, 58, 237, .18);
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 12px 30px rgba(124, 58, 237, .15);
+      font-size: 42px;
+      opacity: 0;
+      transform: translateX(-50%) translateY(24px) scale(.66);
+      transition: opacity .25s ease, transform .25s ease, border-color .25s ease;
+      pointer-events: none;
+    }
+
+    .attitudes {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: scale(.92);
+      transition: opacity .22s ease, transform .22s ease;
+      pointer-events: none;
+    }
+
+    .attitude {
+      position: absolute;
+      display: grid;
+      justify-items: center;
+      gap: 5px;
+      width: 78px;
+      color: #8a8a96;
+      font-size: 12px;
+      font-weight: 800;
+      transform: translate(-50%, -50%) scale(.9);
+      transition: transform .2s ease, opacity .2s ease, color .2s ease;
+      opacity: .88;
+      will-change: transform, opacity;
+    }
+
+    .attitude .face {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 8px 18px rgba(39, 39, 42, .1);
+      font-size: 26px;
+    }
+
+    .attitude .voice-face {
+      color: var(--accent);
+      background: #f7f2ff;
+      box-shadow:
+        0 8px 18px rgba(76, 29, 149, .11),
+        inset 0 0 0 1px rgba(124, 58, 237, .1);
+    }
+
+    .attitude[data-key="funny"] { left: 50%; top: 72px; }
+    .attitude[data-key="shock"] { left: 18%; top: 112px; }
+    .attitude[data-key="team"] { left: 82%; top: 112px; }
+    .attitude[data-key="soft"] { left: 18%; top: 190px; }
+    .attitude[data-key="voice"] { left: 82%; top: 190px; }
+
+    .attitude.active {
+      color: var(--accent);
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.26);
+      z-index: 4;
+    }
+
+    .attitude.active .face {
+      animation: facePop .32s cubic-bezier(.2, 1.35, .35, 1) both;
+    }
+
+    .press-zone {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      display: grid;
+      place-items: center;
+      width: 116px;
+      height: 116px;
+      border: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .28), transparent 22%),
+        linear-gradient(160deg, #9917ff, #5c37f1 64%, #1724d6);
+      color: white;
+      font-weight: 900;
+      box-shadow:
+        0 18px 36px rgba(92, 55, 241, .24),
+        0 0 42px rgba(153, 23, 255, .12);
+      transform: translateX(-50%);
+      cursor: pointer;
+      user-select: none;
+      touch-action: none;
+      transition: transform .22s ease, box-shadow .22s ease;
+      z-index: 3;
+      will-change: transform;
+    }
+
+    .press-zone::before,
+    .press-zone::after {
+      content: "";
+      position: absolute;
+      inset: -20px;
+      border: 2px solid rgba(124, 58, 237, .18);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.28);
+      z-index: 0;
+    }
+
+    .press-zone::after {
+      animation-delay: 1.15s;
+    }
+
+    .press-label {
+      display: grid;
+      gap: 5px;
+      justify-items: center;
+      font-size: 14px;
+      line-height: 1.1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .press-label strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .state-idle .press-zone {
+      animation: pressBreath 2.6s ease-in-out infinite;
+    }
+
+    .state-idle .press-zone::before,
+    .state-idle .press-zone::after {
+      animation-name: rippleIn;
+      animation-duration: 2.3s;
+      animation-timing-function: cubic-bezier(.2, .7, .1, 1);
+      animation-iteration-count: infinite;
+    }
+
+    .state-orbit .press-zone::before,
+    .state-orbit .press-zone::after,
+    .state-focus .press-zone::before,
+    .state-focus .press-zone::after,
+    .state-voice .press-zone::before,
+    .state-voice .press-zone::after,
+    .state-generate .press-zone::before,
+    .state-generate .press-zone::after {
+      animation: none;
+      opacity: 0;
+    }
+
+    @keyframes pressBreath {
+      0%, 100% {
+        transform: translateX(-50%) scale(1);
+        box-shadow:
+          0 18px 36px rgba(92, 55, 241, .24),
+          0 0 42px rgba(153, 23, 255, .12);
+      }
+      50% {
+        transform: translateX(-50%) scale(.965);
+        box-shadow:
+          0 12px 28px rgba(92, 55, 241, .2),
+          0 0 34px rgba(153, 23, 255, .1);
+      }
+    }
+
+    @keyframes rippleIn {
+      0% {
+        opacity: 0;
+        transform: scale(1.34);
+      }
+      16% {
+        opacity: .34;
+      }
+      72% {
+        opacity: .08;
+      }
+      100% {
+        opacity: 0;
+        transform: scale(.86);
+      }
+    }
+
+    @keyframes facePop {
+      0% { transform: scale(.72); }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .state-orbit .attitudes,
+    .state-focus .attitudes,
+    .state-voice .attitudes,
+    .state-generate .attitudes {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .state-keyboard .generation-card,
+    .state-keyboard .arena {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px) scale(.98);
+    }
+
+    .state-keyboard .keyboard-panel {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .state-keyboard .openme {
+      background:
+        linear-gradient(180deg, #ffffff 0%, #f8f8fb 38%, #ececf1 100%);
+    }
+
+    .state-keyboard .mode-btn {
+      color: var(--accent);
+      border-color: rgba(124, 58, 237, .24);
+    }
+
+    .state-orbit .arena::before,
+    .state-focus .arena::before {
+      transform: translateX(-50%) scale(1);
+      opacity: .18;
+    }
+
+    .state-orbit .attitude {
+      animation: attitudeEnter .42s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .state-orbit .attitude[data-key="funny"] { animation-delay: .02s; }
+
+    .state-orbit .attitude[data-key="shock"] { animation-delay: .06s; }
+
+    .state-orbit .attitude[data-key="team"] { animation-delay: .1s; }
+
+    .state-orbit .attitude[data-key="soft"] { animation-delay: .14s; }
+
+    .state-orbit .attitude[data-key="voice"] { animation-delay: .18s; }
+
+    @keyframes attitudeEnter {
+      0% {
+        opacity: 0;
+        filter: blur(6px);
+        transform: translate(-50%, -50%) scale(.68);
+      }
+      58% {
+        opacity: .92;
+        filter: blur(0);
+        transform: translate(-50%, -50%) scale(1.04);
+      }
+      100% {
+        opacity: .88;
+        filter: blur(0);
+        transform: translate(-50%, -50%) scale(.9);
+      }
+    }
+
+    .state-orbit .press-zone,
+    .state-focus .press-zone,
+    .state-voice .press-zone,
+    .state-generate .press-zone {
+      animation: none;
+      transform: translateX(-50%) scale(.9);
+      box-shadow:
+        0 14px 28px rgba(92, 55, 241, .22),
+        0 0 36px rgba(153, 23, 255, .11);
+    }
+
+    .press-zone.hit-pulse {
+      animation: hitPulse .46s cubic-bezier(.2, 1.5, .35, 1) both;
+      box-shadow:
+        0 14px 30px color-mix(in srgb, var(--tone) 26%, transparent),
+        0 0 48px color-mix(in srgb, var(--tone) 24%, transparent);
+    }
+
+    @keyframes hitPulse {
+      0% { transform: translateX(-50%) scale(.88); }
+      44% { transform: translateX(-50%) scale(.78); }
+      100% { transform: translateX(-50%) scale(.9); }
+    }
+
+    .state-focus .hint {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .state-focus .selected-attitude {
+      opacity: 0;
+    }
+
+    .state-focus .attitude:not(.active),
+    .state-voice .attitude:not(.active),
+    .state-generate .attitude:not(.active) {
+      opacity: .24;
+      transform: translate(-50%, -50%) scale(.78);
+    }
+
+    .state-voice .generation-card,
+    .state-generate .generation-card {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .state-voice .arena,
+    .state-generate .arena {
+      height: var(--interaction-arena-height);
+    }
+
+    .state-voice .hint,
+    .state-voice .selected-attitude,
+    .state-generate .hint,
+    .state-generate .selected-attitude {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .state-voice .attitudes,
+    .state-generate .attitudes {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .state-voice .attitude[data-key="funny"],
+    .state-generate .attitude[data-key="funny"] {
+      top: 72px;
+    }
+
+    .state-voice .attitude[data-key="shock"],
+    .state-generate .attitude[data-key="shock"] {
+      left: 18%;
+      top: 112px;
+    }
+
+    .state-voice .attitude[data-key="team"],
+    .state-generate .attitude[data-key="team"] {
+      left: 82%;
+      top: 112px;
+    }
+
+    .state-voice .attitude[data-key="soft"],
+    .state-generate .attitude[data-key="soft"] {
+      left: 18%;
+      top: 190px;
+    }
+
+    .state-voice .attitude[data-key="voice"],
+    .state-generate .attitude[data-key="voice"] {
+      left: 82%;
+      top: 190px;
+    }
+
+    .state-voice .press-zone,
+    .state-generate .press-zone {
+      width: 116px;
+      height: 116px;
+      bottom: 10px;
+    }
+
+    .state-sent .comment-input {
+      background: #fff2f5;
+      color: #17171d;
+    }
+
+    .case-band {
+      padding: 0 0 56px;
+    }
+
+    .case-panel {
+      display: flex;
+      justify-content: center;
+    }
+
+    .case-layout {
+      display: flex;
+      justify-content: center;
+      align-items: start;
+    }
+
+    .case-phone {
+      position: relative;
+      width: min(100%, var(--phone-width));
+      height: var(--phone-height);
+      overflow: hidden;
+      border: var(--phone-border) solid #111116;
+      border-radius: var(--phone-radius);
+      background: #16161d;
+      box-shadow: 0 18px 42px rgba(23, 23, 29, .16);
+      isolation: isolate;
+    }
+
+    .case-phone::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--phone-inner-radius);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    .case-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 42px;
+      padding: 0 28px;
+      color: #f4f4f5;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(22, 22, 29, .98);
+      position: relative;
+      z-index: 3;
+    }
+
+    .case-battery {
+      width: 22px;
+      height: 12px;
+      border-radius: 4px;
+      background: #f4f4f5;
+    }
+
+    .case-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 52px;
+      padding: 0 18px;
+      color: white;
+      background: rgba(22, 22, 29, .98);
+      position: relative;
+      z-index: 3;
+    }
+
+    .case-back {
+      font-size: 28px;
+      line-height: 1;
+      color: #d8d8df;
+    }
+
+    .case-avatar {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #ffd7dd;
+      color: #e11d48;
+      font-weight: 900;
+    }
+
+    .case-author {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #f4f4f5;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .case-follow {
+      min-width: 58px;
+      height: 28px;
+      border: 1px solid rgba(255, 51, 95, .48);
+      border-radius: 999px;
+      color: #ff335f;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .case-image {
+      height: var(--post-media-height);
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, .04), rgba(0, 0, 0, .22)),
+        url("file:///Users/tangyichuan/Library/Application%20Support/LarkShell/sdk_storage/73cbda58d4db0c04e140c55d61060aab/resources/images/img_v3_02113_8c252500-6928-4695-852b-0bcb5b4269cg.jpg") center 12% / cover;
+    }
+
+    .case-copy {
+      padding: 14px 16px 16px;
+      color: #e5e7eb;
+    }
+
+    .case-copy strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .case-copy p {
+      margin: 0;
+      color: #c7c7d1;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .case-copy .case-tag {
+      display: inline-flex;
+      margin-top: 10px;
+      padding: 5px 9px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 9px;
+      color: #d1d5db;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .case-composer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: var(--openme-height);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 13px;
+      height: var(--composer-height);
+      padding: 14px 18px 10px;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      background: rgba(22, 22, 29, .96);
+      backdrop-filter: blur(14px);
+      z-index: 4;
+    }
+
+    .case-comment {
+      flex: 1 1 100%;
+      min-height: 34px;
+      max-height: 66px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .08);
+      color: #a1a1aa;
+      font-size: 13px;
+      line-height: 1.45;
+      overflow: auto;
+      cursor: text;
+    }
+
+    .case-comment.ready {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, .12);
+    }
+
+    .case-comment.editing {
+      color: #f8fafc;
+      box-shadow: inset 0 0 0 1px rgba(255, 122, 26, .58);
+    }
+
+    .case-comment.editing::after {
+      content: "";
+      display: inline-block;
+      width: 2px;
+      height: 17px;
+      margin-left: 3px;
+      transform: translateY(3px);
+      background: #ff8a1f;
+      animation: blink 1s steps(2, start) infinite;
+    }
+
+    .case-tools {
+      display: inline-flex;
+      gap: 14px;
+      color: #d8d8df;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .case-stats {
+      margin-left: auto;
+      display: inline-flex;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .case-send {
+      min-width: 52px;
+      height: 30px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 51, 95, .45);
+      color: white;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .case-send.ready {
+      background: #ff335f;
+    }
+
+    .case-openme {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--openme-height);
+      padding: 14px 18px 18px;
+      border-top: 1px solid rgba(231, 226, 216, .22);
+      background:
+        radial-gradient(circle at 50% 76%, rgba(255, 122, 26, .08), transparent 38%),
+        linear-gradient(180deg, #ffffff 0%, #fefcff 56%, #ffffff 100%);
+      z-index: 5;
+    }
+
+    .case-openme-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 34px;
+    }
+
+    .case-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #7c3aed;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .case-brand .spark {
+      width: 22px;
+      height: 22px;
+      font-size: 14px;
+    }
+
+    .case-mode-btn {
+      min-width: 66px;
+      height: 30px;
+      border: 1px solid #e7e2d8;
+      border-radius: 999px;
+      background: white;
+      color: #484852;
+      font-size: 13px;
+      font-weight: 900;
+      box-shadow: 0 3px 12px rgba(39, 39, 42, .08);
+      cursor: pointer;
+    }
+
+    .case-gen-card {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 58px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 122, 26, .24);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .94);
+      box-shadow: 0 10px 24px rgba(255, 122, 26, .1);
+      color: #27272a;
+      opacity: 0;
+      transform: translateY(8px) scale(.98);
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+      z-index: 4;
+    }
+
+    .case-gen-card.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      animation: cardSettle .34s ease both;
+    }
+
+    .case-gen-card.case-hit {
+      border-color: rgba(255, 122, 26, .46);
+      box-shadow:
+        0 12px 28px rgba(255, 122, 26, .16),
+        inset 0 0 22px rgba(255, 122, 26, .08);
+    }
+
+    .case-gen-card b {
+      color: #ea580c;
+    }
+
+    .case-gen-text {
+      display: inline;
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .case-arena {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      height: var(--interaction-arena-height);
+      border-radius: 26px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 70%, rgba(255, 122, 26, .08), transparent 42%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .78));
+    }
+
+    .case-hint {
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      max-width: 78%;
+      padding: 0 10px;
+      border: 1px solid rgba(255, 122, 26, .15);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .8);
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      z-index: 2;
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .case-options {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(.92);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .case-option {
+      position: absolute;
+      display: grid;
+      justify-items: center;
+      gap: 5px;
+      width: 78px;
+      color: #8a8a96;
+      font-size: 12px;
+      font-weight: 900;
+      transform: translate(-50%, -50%) scale(.9);
+      opacity: .88;
+      transition: opacity .2s ease, transform .2s ease, color .2s ease;
+      will-change: transform, opacity;
+    }
+
+    .case-option .face {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 8px 18px rgba(39, 39, 42, .1);
+      font-size: 26px;
+    }
+
+    .case-option[data-key="score"] { left: 50%; top: 72px; }
+    .case-option[data-key="fun"] { left: 18%; top: 112px; }
+    .case-option[data-key="view"] { left: 82%; top: 112px; }
+    .case-option[data-key="ask"] { left: 18%; top: 190px; }
+    .case-option[data-key="support"] { left: 82%; top: 190px; }
+
+    .case-option.active {
+      color: #ea580c;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.26);
+      z-index: 4;
+    }
+
+    .case-option.active .face {
+      animation: facePop .32s cubic-bezier(.2, 1.35, .35, 1) both;
+    }
+
+    .case-press {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      display: grid;
+      place-items: center;
+      width: 116px;
+      height: 116px;
+      border: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .3), transparent 22%),
+        linear-gradient(160deg, #ff8a1f, #7c3aed 66%, #1724d6);
+      color: white;
+      font-size: 14px;
+      font-weight: 900;
+      box-shadow:
+        0 18px 34px rgba(255, 122, 26, .2),
+        0 0 38px rgba(124, 58, 237, .12);
+      transform: translateX(-50%);
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      z-index: 3;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    .case-press::before,
+    .case-press::after {
+      content: "";
+      position: absolute;
+      inset: -20px;
+      border: 2px solid rgba(255, 122, 26, .18);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.28);
+    }
+
+    .case-press::after {
+      animation-delay: 1.15s;
+    }
+
+    .case-state-idle .case-press {
+      animation: pressBreath 2.6s ease-in-out infinite;
+    }
+
+    .case-state-idle .case-press::before,
+    .case-state-idle .case-press::after {
+      animation-name: rippleIn;
+      animation-duration: 2.3s;
+      animation-timing-function: cubic-bezier(.2, .7, .1, 1);
+      animation-iteration-count: infinite;
+    }
+
+    .case-state-orbit .case-options,
+    .case-state-focus .case-options,
+    .case-state-generate .case-options {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .case-state-orbit .case-option {
+      animation: attitudeEnter .42s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .case-state-orbit .case-option:nth-child(1) { animation-delay: .02s; }
+    .case-state-orbit .case-option:nth-child(2) { animation-delay: .06s; }
+    .case-state-orbit .case-option:nth-child(3) { animation-delay: .1s; }
+    .case-state-orbit .case-option:nth-child(4) { animation-delay: .14s; }
+    .case-state-orbit .case-option:nth-child(5) { animation-delay: .18s; }
+
+    .case-state-focus .case-option:not(.active),
+    .case-state-generate .case-option:not(.active) {
+      opacity: .24;
+      transform: translate(-50%, -50%) scale(.74);
+    }
+
+    .case-state-focus .case-hint,
+    .case-state-generate .case-hint {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-4px);
+      pointer-events: none;
+    }
+
+    .case-state-orbit .case-press,
+    .case-state-focus .case-press,
+    .case-state-generate .case-press {
+      animation: none;
+      transform: translateX(-50%) scale(.9);
+    }
+
+    .case-press.case-hit-pulse {
+      animation: hitPulse .46s cubic-bezier(.2, 1.5, .35, 1) both;
+    }
+
+    .case-barrage-live {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 108px;
+      height: 112px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .case-barrage-chip {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 10px;
+      border: 1px solid rgba(255, 122, 26, .2);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .94);
+      color: #27272a;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: 0 10px 24px rgba(255, 122, 26, .12);
+      opacity: 0;
+      transform: translate(-50%, 20px) scale(.8);
+      animation: barrageFly 1.05s cubic-bezier(.16, 1, .3, 1) both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    .case-keyboard-panel {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      display: grid;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .case-keyboard-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 24px;
+      color: #8a8a96;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .case-candidates {
+      display: flex;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .case-candidates span {
+      flex: 0 0 auto;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #ea580c;
+    }
+
+    .case-key-row {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .case-key-row.mid {
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      padding: 0 13px;
+    }
+
+    .case-key-row.bottom {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      padding: 0 32px;
+    }
+
+    .case-key-row.controls {
+      grid-template-columns: 1.1fr 1fr 4.4fr 1fr 1.4fr;
+    }
+
+    .case-key {
+      display: grid;
+      place-items: center;
+      height: 34px;
+      border: 0;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #27272a;
+      font-size: 15px;
+      font-weight: 900;
+      box-shadow:
+        0 1px 0 rgba(39, 39, 42, .12),
+        0 6px 14px rgba(39, 39, 42, .08);
+      cursor: pointer;
+    }
+
+    .case-key:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(39, 39, 42, .08);
+    }
+
+    .case-key.wide,
+    .case-key.action {
+      background: #ececf1;
+      color: #4b4b55;
+      font-size: 13px;
+    }
+
+    .case-key.space {
+      background: #ffffff;
+      color: #71717a;
+    }
+
+    .case-state-keyboard .case-openme {
+      background:
+        linear-gradient(180deg, #ffffff 0%, #f8f8fb 38%, #ececf1 100%);
+    }
+
+    .case-state-keyboard .case-mode-btn {
+      color: var(--accent);
+      border-color: rgba(124, 58, 237, .24);
+    }
+
+    .case-state-keyboard .case-arena,
+    .case-state-keyboard .case-gen-card {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px) scale(.98);
+    }
+
+    .case-state-keyboard .case-keyboard-panel {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    @media (max-width: 880px) {
+      :root {
+        --phone-height: 810px;
+      }
+
+      .shell {
+        width: min(100vw - 28px, 640px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --phone-border: 7px;
+        --phone-radius: 36px;
+        --phone-inner-radius: 28px;
+      }
+
+      .shell {
+        width: min(100vw - 18px, 430px);
+      }
+
+      .feed {
+        padding: 0 14px;
+      }
+
+      .composer,
+      .openme,
+      .case-composer,
+      .case-openme {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="cold-start shell" id="coldStart">
+      <div class="keyboard-onboard" id="onboardPhone" aria-label="OpenMe 冷启动流程">
+        <div class="onboard-status"><span>9:41</span><span class="onboard-battery" aria-hidden="true"></span></div>
+        <div class="onboard-top">
+          <div class="onboard-brand"><span class="spark">✦</span><span>OpenMe 首次打开</span></div>
+          <span class="onboard-step" id="onboardStep">1 / 4 首页</span>
+        </div>
+
+        <div class="onboard-screens">
+          <section class="onboard-screen is-active" data-onboard-screen="scene" aria-label="场景激活">
+            <div class="onboard-scene-simple">
+              <div class="onboard-scene-prompt">
+                <span class="onboard-slogan">你来表态，分身表达。</span>
+                <h1>想评论，但不想打字？</h1>
+                <p>OpenMe 会把你的态度转成像你本人会说的话。</p>
+                <div class="onboard-actions">
+                  <button class="onboard-primary" id="onboardStartQuiz" type="button">现在开始</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="onboard-screen" data-onboard-screen="quiz" aria-label="CBTI 评论人格测试">
+            <div class="onboard-scroll">
+              <div class="onboard-quiz-header">
+                <div class="onboard-quiz-title">
+                  <h2 id="onboardQuizTitle">选择最像你的评论</h2>
+                  <p>每题是一条真实内容消费场景，选最接近你平时表达习惯的那条。</p>
+                </div>
+                <span class="onboard-quiz-count" id="onboardQuizCount">1 / 5</span>
+              </div>
+
+              <article class="onboard-card">
+                <div class="onboard-quiz-media visual-fan" id="onboardQuizMedia">
+                  <span class="onboard-media-badge" id="onboardQuizTag">追星</span>
+                  <strong class="onboard-media-caption" id="onboardMediaCaption">偶像发了一组旅行图</strong>
+                </div>
+                <div class="onboard-quiz-copy">
+                  <strong id="onboardScenarioTitle"></strong>
+                  <span id="onboardScenarioCopy"></span>
+                </div>
+              </article>
+
+              <div class="onboard-options" id="onboardOptions" aria-label="评论选项"></div>
+            </div>
+          </section>
+
+          <section class="onboard-screen" data-onboard-screen="persona" aria-label="分身确认">
+            <div class="onboard-scroll">
+              <article class="onboard-persona-card onboard-card">
+                <span class="onboard-code" id="onboardPersonaCode">EHBF</span>
+                <div>
+                  <h2 id="onboardPersonaName">弹幕气氛组</h2>
+                  <p id="onboardPersonaDesc">你更擅长把第一反应说出来，评论像弹幕一样轻、快、有情绪，但仍然知道什么时候该收一点。</p>
+                </div>
+                <div class="onboard-persona-meta">
+                  <div class="onboard-meta-item">
+                    <strong>emoji 偏好</strong>
+                    <span id="onboardPersonaEmoji">😂 😍 🥹 ✨</span>
+                  </div>
+                  <div class="onboard-meta-item">
+                    <strong>口头禅倾向</strong>
+                    <span id="onboardPersonaCatch">“太会了”“有点东西”</span>
+                  </div>
+                  <div class="onboard-meta-item">
+                    <strong>评论长度</strong>
+                    <span id="onboardPersonaLength">短打优先，必要时补半句理由。</span>
+                  </div>
+                  <div class="onboard-meta-item">
+                    <strong>内容重心</strong>
+                    <span id="onboardPersonaFocus">先表达情绪，再补一点场景感。</span>
+                  </div>
+                </div>
+                <div class="onboard-result-actions">
+                  <button class="onboard-primary" id="onboardConfirmPersona" type="button">确认开始使用</button>
+                  <button class="onboard-secondary" id="onboardRestartQuiz" type="button">重新测试</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="onboard-screen" data-onboard-screen="use" aria-label="首次使用闭环">
+            <div class="onboard-use-phone use-state-idle" id="onboardUsePhone">
+              <div class="onboard-use-content">
+                <div class="onboard-use-image"></div>
+                <div class="onboard-use-copy">
+                  <strong>雷军回应 T 恤事件，评论区开始玩梗</strong>
+                  <span>这条内容下面，大家正在聊营销、人情世故和友商互动。</span>
+                </div>
+              </div>
+
+              <div class="onboard-use-callout">看到想评论的内容？点击输入框，长按 OpenMe，滑向你的态度。</div>
+
+              <section class="onboard-use-composer" aria-label="评论输入区">
+                <div class="onboard-use-input" id="onboardUseInput" role="textbox" tabindex="0">说点什么...</div>
+                <div class="onboard-use-tools"><span>⌕</span><span>▧</span><span>@</span><span>☺</span><span>＋</span></div>
+                <button class="onboard-use-send" id="onboardUseSend" type="button">发送</button>
+              </section>
+
+              <section class="onboard-use-openme" aria-label="OpenMe 首次体验面板">
+                <div class="onboard-use-head"><span>✦ OpenMe</span><span>首次体验</span></div>
+                <div class="onboard-use-generated" id="onboardUseGenerated">
+                  <b>AI 生成：</b><span id="onboardUseGeneratedText"></span>
+                </div>
+                <div class="onboard-use-barrage" id="onboardUseBarrage" aria-hidden="true"></div>
+                <div class="onboard-use-arena" id="onboardUseArena">
+                  <div class="onboard-use-hint" id="onboardUseHint">长按中心，滑向态度</div>
+                  <div class="onboard-use-options" id="onboardUseOptions">
+                    <div class="onboard-use-option" data-key="score"><span class="face">👍</span><span>佩服</span></div>
+                    <div class="onboard-use-option" data-key="fun"><span class="face">🤣</span><span>玩梗</span></div>
+                    <div class="onboard-use-option" data-key="view"><span class="face">🧐</span><span>视角</span></div>
+                    <div class="onboard-use-option" data-key="ask"><span class="face">🤔</span><span>追问</span></div>
+                    <div class="onboard-use-option" data-key="support"><span class="face">👏</span><span>支持</span></div>
+                  </div>
+                  <button class="onboard-use-press" id="onboardUsePress" type="button">按住</button>
+                </div>
+              </section>
+
+              <div class="onboard-use-complete" id="onboardUseComplete">
+                <h2>开始使用</h2>
+                <p>冷启动完成。之后在小红书、抖音等内容平台里唤起键盘，就会按这个风格生成评论。</p>
+                <button class="onboard-primary" id="onboardGoExamples" type="button">查看真实案例</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="main-band shell">
+      <div class="prototype-layout">
+        <div class="phone-wrap">
+          <div class="phone state-idle" id="demoPhone" aria-label="OpenMe 交互原型">
+            <div class="status">
+              <span>9:41</span>
+              <span class="battery" aria-hidden="true"></span>
+            </div>
+            <nav class="app-nav" aria-label="内容平台导航">
+              <button class="back" aria-label="返回">‹</button>
+              <div class="author">
+                <span class="avatar">昀</span>
+                <span class="author-name">张若昀STUDIO</span>
+              </div>
+              <button class="follow">关注</button>
+              <button class="share" aria-label="分享">↗</button>
+            </nav>
+
+            <section class="feed" aria-label="内容详情">
+              <div class="media">
+                <span class="media-chip">游记</span>
+                <span class="page-count">1/16</span>
+              </div>
+              <div class="caption">
+                <h3>张若昀｜游记存档📷</h3>
+                <p>立夏快乐🌿 #张若昀 · 共 629 条评论</p>
+                <div class="actions">
+                  <span>♡ 1.2万</span>
+                  <span>☆ 1196</span>
+                  <span>◌ 629</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="composer" aria-label="评论输入区">
+              <div class="comment-input placeholder" id="commentInput" role="textbox" aria-label="评论内容" tabindex="0">让大家听到你的声音</div>
+              <div class="composer-tools">
+                <button class="tool-icon" aria-label="语音">⌕</button>
+                <button class="tool-icon" aria-label="图片">▧</button>
+                <button class="tool-icon" aria-label="提及">@</button>
+                <button class="tool-icon" aria-label="表情">☺</button>
+                <button class="tool-icon" aria-label="更多">＋</button>
+                <button class="send" id="sendButton">发送</button>
+              </div>
+              <div class="chips">
+                <span class="mention">@糯米_NuoMi ×</span>
+                <span class="emoji-chip">😍</span>
+                <span class="emoji-chip">🔥</span>
+                <span class="emoji-chip">🤣</span>
+                <span class="emoji-chip">📌</span>
+              </div>
+            </section>
+
+            <section class="openme" aria-label="OpenMe 键盘">
+              <div class="openme-head">
+                <div class="brand"><span class="spark">✦</span> OpenMe</div>
+                <button class="mode-btn" id="modeButton">切换</button>
+              </div>
+
+              <div class="generation-card" id="generationCard">
+                <div class="ai-output" id="aiOutput">
+                  <span class="gen-label">AI 生成：</span>
+                  <div class="gen-text"><span id="generatedText"></span><span class="cursor"></span></div>
+                </div>
+                <div class="voice-output" id="voiceOutput">
+                  <span class="voice-mic" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"></path><path d="M5 10v1a7 7 0 0 0 14 0v-1"></path><path d="M12 18v3"></path><path d="M8 21h8"></path></svg>
+                  </span>
+                  <div class="voice-copy">
+                    <strong>语音输入中</strong>
+                    <span id="voiceTranscript">正在听你说话...</span>
+                  </div>
+                  <div class="voice-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+                </div>
+              </div>
+              <div class="emotion-ray" id="emotionRay" aria-hidden="true"></div>
+              <div class="emotion-barrage" id="emotionBarrage" aria-hidden="true"></div>
+
+              <div class="arena" id="arena">
+                <div class="hint" id="hintText">我准备好了...</div>
+                <div class="selected-attitude" id="selectedFace"></div>
+                <div class="attitudes" id="attitudes">
+                  <div class="attitude" data-key="funny"><span class="face">😍</span><span>被帅到</span></div>
+                  <div class="attitude" data-key="shock"><span class="face">🔥</span><span>终于更了</span></div>
+                  <div class="attitude" data-key="team"><span class="face">🤣</span><span>催更一下</span></div>
+                  <div class="attitude" data-key="soft"><span class="face">📌</span><span>认真安利</span></div>
+                  <div class="attitude" data-key="voice"><span class="face voice-face" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"></path><path d="M5 10v1a7 7 0 0 0 14 0v-1"></path><path d="M12 18v3"></path><path d="M8 21h8"></path></svg></span><span>语音输入</span></div>
+                </div>
+                <button class="press-zone" id="pressButton" aria-label="按住表态">
+                  <span class="press-label"><strong>✦</strong><span id="pressText">按住</span></span>
+                </button>
+              </div>
+
+              <div class="keyboard-panel" id="keyboardPanel" aria-label="26 键键盘">
+                <div class="keyboard-meta">
+                  <span>中文 26键</span>
+                  <div class="candidate-strip" aria-label="候选词">
+                    <span>太帅了</span><span>终于更了</span><span>催更</span><span>入坑</span>
+                  </div>
+                </div>
+                <div class="key-row">
+                  <button class="key" data-key="q">Q</button><button class="key" data-key="w">W</button><button class="key" data-key="e">E</button><button class="key" data-key="r">R</button><button class="key" data-key="t">T</button><button class="key" data-key="y">Y</button><button class="key" data-key="u">U</button><button class="key" data-key="i">I</button><button class="key" data-key="o">O</button><button class="key" data-key="p">P</button>
+                </div>
+                <div class="key-row mid">
+                  <button class="key" data-key="a">A</button><button class="key" data-key="s">S</button><button class="key" data-key="d">D</button><button class="key" data-key="f">F</button><button class="key" data-key="g">G</button><button class="key" data-key="h">H</button><button class="key" data-key="j">J</button><button class="key" data-key="k">K</button><button class="key" data-key="l">L</button>
+                </div>
+                <div class="key-row bottom">
+                  <button class="key" data-key="z">Z</button><button class="key" data-key="x">X</button><button class="key" data-key="c">C</button><button class="key" data-key="v">V</button><button class="key" data-key="b">B</button><button class="key" data-key="n">N</button><button class="key" data-key="m">M</button>
+                </div>
+                <div class="key-row controls">
+                  <button class="key wide" data-key="shift">中/英</button>
+                  <button class="key wide" data-key=",">，</button>
+                  <button class="key space" data-key="space">空格</button>
+                  <button class="key wide" data-key=".">。</button>
+                  <button class="key action" data-key="backspace">退格</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="case-band shell">
+      <div class="case-panel">
+        <div class="case-layout">
+          <article class="case-phone case-state-idle" id="leiPhone" aria-label="雷军车展 OpenMe 交互原型">
+            <div class="case-status">
+              <span>9:41</span>
+              <span class="case-battery" aria-hidden="true"></span>
+            </div>
+            <div class="case-top">
+              <span class="case-back">‹</span>
+              <span class="case-avatar">车</span>
+              <span class="case-author">小新爱拍车</span>
+              <span class="case-follow">关注</span>
+            </div>
+            <div class="case-image" aria-hidden="true"></div>
+            <div class="case-copy">
+              <strong>北京车展上，雷军给友商送T恤</strong>
+              <p>雷军这个T恤怎么想，都给友商送礼物了吗 #雷军 #北京车展 #比亚迪</p>
+              <span class="case-tag">活动｜2026北京车展</span>
+            </div>
+            <div class="case-composer">
+              <span class="case-comment" id="leiComment" role="textbox" tabindex="0">说点什么...</span>
+              <span class="case-tools">⌕ ▧ @ ☺ ＋</span>
+              <span class="case-stats">♡ 5 ☆ 1 ◌ 7</span>
+              <button class="case-send" id="leiSend">发送</button>
+            </div>
+            <section class="case-openme" aria-label="雷军案例 OpenMe 键盘">
+              <div class="case-openme-head">
+                <div class="case-brand"><span class="spark">✦</span> OpenMe</div>
+                <button class="case-mode-btn" id="leiModeButton">切换</button>
+              </div>
+
+              <div class="case-gen-card" id="leiGenCard"><b>AI 生成：</b><span class="case-gen-text" id="leiGenText"></span><span class="cursor"></span></div>
+
+              <div class="case-arena" id="leiArena">
+                <div class="case-hint" id="leiHint">我准备好了...</div>
+                <div class="case-barrage-live" id="leiBarrage" aria-hidden="true"></div>
+                <div class="case-options" id="leiOptions">
+                  <div class="case-option" data-key="score"><span class="face">👍</span><span>这波满分</span></div>
+                  <div class="case-option" data-key="fun"><span class="face">🤣</span><span>太好笑了</span></div>
+                  <div class="case-option" data-key="view"><span class="face">🧐</span><span>提供视角</span></div>
+                  <div class="case-option" data-key="ask"><span class="face">🤔</span><span>我想追问</span></div>
+                  <div class="case-option" data-key="support"><span class="face">👏</span><span>支持</span></div>
+                </div>
+                <button class="case-press" id="leiPress" aria-label="按住表态">按住</button>
+              </div>
+
+              <div class="case-keyboard-panel" id="leiKeyboard" aria-label="雷军案例 26 键键盘">
+                <div class="case-keyboard-meta">
+                  <span>中文 26键</span>
+                  <div class="case-candidates"><span>营销</span><span>友商</span><span>T恤</span><span>国产车</span></div>
+                </div>
+                <div class="case-key-row">
+                  <button class="case-key" data-key="q">Q</button><button class="case-key" data-key="w">W</button><button class="case-key" data-key="e">E</button><button class="case-key" data-key="r">R</button><button class="case-key" data-key="t">T</button><button class="case-key" data-key="y">Y</button><button class="case-key" data-key="u">U</button><button class="case-key" data-key="i">I</button><button class="case-key" data-key="o">O</button><button class="case-key" data-key="p">P</button>
+                </div>
+                <div class="case-key-row mid">
+                  <button class="case-key" data-key="a">A</button><button class="case-key" data-key="s">S</button><button class="case-key" data-key="d">D</button><button class="case-key" data-key="f">F</button><button class="case-key" data-key="g">G</button><button class="case-key" data-key="h">H</button><button class="case-key" data-key="j">J</button><button class="case-key" data-key="k">K</button><button class="case-key" data-key="l">L</button>
+                </div>
+                <div class="case-key-row bottom">
+                  <button class="case-key" data-key="z">Z</button><button class="case-key" data-key="x">X</button><button class="case-key" data-key="c">C</button><button class="case-key" data-key="v">V</button><button class="case-key" data-key="b">B</button><button class="case-key" data-key="n">N</button><button class="case-key" data-key="m">M</button>
+                </div>
+                <div class="case-key-row controls">
+                  <button class="case-key wide" data-key="shift">中/英</button>
+                  <button class="case-key wide" data-key=",">，</button>
+                  <button class="case-key space" data-key="space">空格</button>
+                  <button class="case-key wide" data-key=".">。</button>
+                  <button class="case-key action" data-key="backspace">退格</button>
+                </div>
+              </div>
+            </section>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function initOnboardColdStart() {
+      const coldStart = document.getElementById("coldStart");
+      const onboardPhone = document.getElementById("onboardPhone");
+      if (!coldStart || !onboardPhone) return;
+      if (onboardPhone.dataset.ready === "true") return;
+      onboardPhone.dataset.ready = "true";
+
+      const screens = [...coldStart.querySelectorAll("[data-onboard-screen]")];
+      const stepText = document.getElementById("onboardStep");
+      const stepLabels = {
+        scene: "1 / 4 首页",
+        quiz: "2 / 4 CBTI 评测",
+        persona: "2 / 4 CBTI 评测",
+        use: "3 / 4 体验一次",
+        complete: "4 / 4 开始使用"
+      };
+
+      function showScreen(screenName) {
+        screens.forEach((screen) => {
+          screen.classList.toggle("is-active", screen.dataset.onboardScreen === screenName);
+        });
+        stepText.textContent = stepLabels[screenName];
+        const activeScroll = coldStart.querySelector(`[data-onboard-screen="${screenName}"] .onboard-scroll`);
+        if (activeScroll) activeScroll.scrollTop = 0;
+      }
+
+      const quizEls = {
+        count: document.getElementById("onboardQuizCount"),
+        title: document.getElementById("onboardQuizTitle"),
+        media: document.getElementById("onboardQuizMedia"),
+        tag: document.getElementById("onboardQuizTag"),
+        mediaCaption: document.getElementById("onboardMediaCaption"),
+        scenarioTitle: document.getElementById("onboardScenarioTitle"),
+        scenarioCopy: document.getElementById("onboardScenarioCopy"),
+        options: document.getElementById("onboardOptions")
+      };
+      const personaEls = {
+        code: document.getElementById("onboardPersonaCode"),
+        name: document.getElementById("onboardPersonaName"),
+        desc: document.getElementById("onboardPersonaDesc"),
+        emoji: document.getElementById("onboardPersonaEmoji"),
+        catch: document.getElementById("onboardPersonaCatch"),
+        length: document.getElementById("onboardPersonaLength"),
+        focus: document.getElementById("onboardPersonaFocus")
+      };
+
+      const quiz = [
+        {
+          tag: "追星",
+          visual: "visual-fan",
+          mediaCaption: "张若昀游记新图，评论区正在刷屏",
+          title: "偶像发了一组旅行图，你想表达喜欢但不想写得太用力。",
+          copy: "场景：小红书图文内容，评论区在聊照片氛围、更新频率和作品安利。",
+          options: [
+            { text: "啊啊啊这组图也太会拍了吧，立夏快乐但我先被帅晕 😍", note: "外放、情绪强、偏长", score: [1, 1, 1, 1] },
+            { text: "好看，氛围感很足。", note: "克制、短打、偏观察", score: [-1, -1, -1, -1] },
+            { text: "这不是游记，这是行走的电影海报库存。", note: "玩梗、短句、偏认知", score: [1, 1, -1, -1] },
+            { text: "他镜头里的季节感很舒服，像把路上的风也拍进去了。", note: "内敛、长句、情绪细腻", score: [-1, -1, 1, 1] }
+          ]
+        },
+        {
+          tag: "搞笑",
+          visual: "visual-funny",
+          mediaCaption: "朋友把奶茶当咖啡带进会议",
+          title: "一条很轻的搞笑视频，评论区已经开始接梗。",
+          copy: "场景：短视频内容，主角表情很认真，但手里拿的是超大杯奶茶。",
+          options: [
+            { text: "这是打工人的新型续命仪式，领导看了都想点一杯 🤣", note: "外放、幽默、长句", score: [1, 1, 1, 1] },
+            { text: "笑死，灵魂是咖啡因，外壳是珍珠。", note: "幽默、短打、偏梗", score: [1, 1, -1, -1] },
+            { text: "这种反差挺真实的，越认真越好笑。", note: "克制、观察、短句", score: [-1, -1, -1, -1] },
+            { text: "我懂，开会前只要手里有杯东西，就觉得自己还能撑一下。", note: "共情、长句、情绪驱动", score: [-1, 1, 1, 1] }
+          ]
+        },
+        {
+          tag: "知识",
+          visual: "visual-knowledge",
+          mediaCaption: "睡前刷手机为什么会影响入睡",
+          title: "科普内容很有用，你想留下一个不生硬的反馈。",
+          copy: "场景：知识类视频，画面里有时间轴、蓝光示意和睡眠曲线。",
+          options: [
+            { text: "原来不是我自控力差，是大脑真的被蓝光骗醒了。", note: "情绪化理解、短句", score: [1, 1, -1, 1] },
+            { text: "这个解释很清楚，关键点是光照、奖励反馈和睡前兴奋度叠加。", note: "严肃、长句、认知驱动", score: [-1, -1, 1, -1] },
+            { text: "懂了，今晚继续刷，但会带着知识点刷。", note: "幽默、短打", score: [1, 1, -1, -1] },
+            { text: "收藏了，先从提前半小时放下手机开始试试。", note: "内敛、实用、短句", score: [-1, -1, -1, -1] }
+          ]
+        },
+        {
+          tag: "社会新闻",
+          visual: "visual-news",
+          mediaCaption: "T 恤事件带起一轮商业讨论",
+          title: "热点内容下面观点很多，你想参与但不想显得攻击性太强。",
+          copy: "场景：新闻/商业讨论，评论区在聊营销能力、人情往来和品牌互动。",
+          options: [
+            { text: "这事不能只看谁会营销，也得看它把关系和话题都接住了。", note: "严肃、长句、认知驱动", score: [-1, -1, 1, -1] },
+            { text: "各有各的算盘，但这波确实把场面做圆了。", note: "克制、短句、观点明确", score: [-1, -1, -1, -1] },
+            { text: "雷总这波营销真的绝了👍 一件T恤把友商人情做满，流量也赚满了", note: "外放、夸赞、偏长", score: [1, 1, 1, 1] },
+            { text: "品牌联动最难的是分寸，这次好像刚好卡在了友好和有梗之间。", note: "观察、长句、认知驱动", score: [-1, -1, 1, -1] }
+          ]
+        },
+        {
+          tag: "情感",
+          visual: "visual-emotion",
+          mediaCaption: "异地恋久别重逢，只问了一句吃饭了吗",
+          title: "一个很轻的情感片段，评论区很多人被戳中。",
+          copy: "场景：生活向视频，画面是车站、拥抱和一句很日常的问候。",
+          options: [
+            { text: "最想念的人见到了，反而只会说最普通的话，太真实了 🥹", note: "情绪、长句、内敛", score: [-1, -1, 1, 1] },
+            { text: "嘴上吃饭了吗，心里其实是我好想你。", note: "短句、情感驱动", score: [-1, 1, -1, 1] },
+            { text: "成年人表达爱意：先确认对方有没有按时吃饭。", note: "幽默、认知、短句", score: [1, 1, -1, -1] },
+            { text: "这种关系最动人的地方，是两个人都把关心藏在日常细节里。", note: "严肃、长句、认知+情感", score: [-1, -1, 1, 1] }
+          ]
+        }
+      ];
+
+      const score = { expression: 0, humor: 0, length: 0, content: 0 };
+      let quizIndex = 0;
+      let quizLocked = false;
+
+      function resetScore() {
+        score.expression = 0;
+        score.humor = 0;
+        score.length = 0;
+        score.content = 0;
+      }
+
+      function renderQuestion() {
+        const question = quiz[quizIndex];
+        quizLocked = false;
+        quizEls.count.textContent = `${quizIndex + 1} / ${quiz.length}`;
+        quizEls.tag.textContent = question.tag;
+        quizEls.mediaCaption.textContent = question.mediaCaption;
+        quizEls.media.className = `onboard-quiz-media ${question.visual}`;
+        quizEls.scenarioTitle.textContent = question.title;
+        quizEls.scenarioCopy.textContent = question.copy;
+        quizEls.options.replaceChildren();
+
+        question.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          const badge = document.createElement("span");
+          const body = document.createElement("span");
+          const comment = document.createElement("strong");
+          const note = document.createElement("span");
+          button.type = "button";
+          button.className = "onboard-option";
+          badge.className = "onboard-option-index";
+          badge.textContent = String.fromCharCode(65 + index);
+          comment.textContent = option.text;
+          note.textContent = option.note;
+          body.append(comment, note);
+          button.append(badge, body);
+          button.addEventListener("click", () => chooseOption(button, option.score));
+          quizEls.options.append(button);
+        });
+      }
+
+      function chooseOption(button, selectedScore) {
+        if (quizLocked) return;
+        quizLocked = true;
+        button.classList.add("is-selected");
+        score.expression += selectedScore[0];
+        score.humor += selectedScore[1];
+        score.length += selectedScore[2];
+        score.content += selectedScore[3];
+
+        window.setTimeout(() => {
+          if (quizIndex < quiz.length - 1) {
+            quizIndex += 1;
+            renderQuestion();
+          } else {
+            renderPersona();
+            showScreen("use");
+          }
+        }, 280);
+      }
+
+      function personaName(code) {
+        const names = {
+          EHLF: "热场共情家",
+          EHBF: "弹幕气氛组",
+          EHLC: "长梗观察员",
+          EHBC: "快嘴梗王",
+          ESLF: "直球安利官",
+          ESBF: "真诚短评人",
+          ESLC: "认真补充者",
+          ESBC: "理性快评人",
+          IHLF: "轻梗共鸣者",
+          IHBF: "温柔玩梗人",
+          IHLC: "慢热观察员",
+          IHBC: "冷幽默短评人",
+          ISLF: "细腻共情者",
+          ISBF: "温柔短评人",
+          ISLC: "冷静观察员",
+          ISBC: "克制判断者"
+        };
+        return names[code] || "专属评论分身";
+      }
+
+      function renderPersona() {
+        const code = [
+          score.expression >= 0 ? "E" : "I",
+          score.humor >= 0 ? "H" : "S",
+          score.length >= 0 ? "L" : "B",
+          score.content >= 0 ? "F" : "C"
+        ].join("");
+        const isExpressive = code[0] === "E";
+        const isHumor = code[1] === "H";
+        const isLong = code[2] === "L";
+        const isFeeling = code[3] === "F";
+        const desc = [
+          isExpressive ? "你更愿意把第一反应说出来" : "你表达更克制，偏向留一点余地",
+          isHumor ? "喜欢用轻松的方式接住内容" : "更在意评论的准确和分寸",
+          isLong ? "愿意补充完整理由" : "偏好短句快速表态",
+          isFeeling ? "常从情绪和共鸣出发" : "常从观察和判断出发"
+        ].join("，") + "。";
+
+        personaEls.code.textContent = code;
+        personaEls.name.textContent = personaName(code);
+        personaEls.desc.textContent = desc;
+        personaEls.emoji.textContent = isFeeling
+          ? (isHumor ? "😂 😍 🥹 ✨" : "🥹 ✨ ❤️ 📌")
+          : (isHumor ? "🤣 🧐 👍 👀" : "👍 🧐 📌 ✅");
+        personaEls.catch.textContent = isHumor
+          ? "“有点东西”“笑死但合理”"
+          : (isFeeling ? "“我懂”“太真实了”" : "“关键在于”“这点挺重要”");
+        personaEls.length.textContent = isLong ? "会生成更完整的半长句，默认带一点原因。" : "会优先生成短评，必要时只补一个重点。";
+        personaEls.focus.textContent = isFeeling ? "先表达情绪和共鸣，再收住语气。" : "先抓内容观点，再补充判断依据。";
+      }
+
+      function startQuiz() {
+        resetScore();
+        quizIndex = 0;
+        renderQuestion();
+        showScreen("quiz");
+      }
+
+      document.getElementById("onboardStartQuiz").addEventListener("click", startQuiz);
+      document.getElementById("onboardRestartQuiz")?.addEventListener("click", startQuiz);
+      document.getElementById("onboardConfirmPersona")?.addEventListener("click", () => showScreen("use"));
+      document.getElementById("onboardGoExamples").addEventListener("click", () => {
+        document.querySelector(".main-band")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      const usePhone = document.getElementById("onboardUsePhone");
+      const useInput = document.getElementById("onboardUseInput");
+      const usePress = document.getElementById("onboardUsePress");
+      const useArena = document.getElementById("onboardUseArena");
+      const useHint = document.getElementById("onboardUseHint");
+      const useOptions = [...document.querySelectorAll(".onboard-use-option")];
+      const useGenerated = document.getElementById("onboardUseGenerated");
+      const useGeneratedText = document.getElementById("onboardUseGeneratedText");
+      const useBarrage = document.getElementById("onboardUseBarrage");
+      const useSend = document.getElementById("onboardUseSend");
+      const useComplete = document.getElementById("onboardUseComplete");
+      const useTones = {
+        score: {
+          comment: "雷总这波营销真的绝了👍 一件T恤把友商人情做满，流量也赚满了",
+          bursts: ["营销绝了", "人情做满", "流量赚满"]
+        },
+        fun: {
+          comment: "友商：谢谢雷总的T恤，下次发布会穿它来砸场子 🤣👕",
+          bursts: ["谢谢雷总", "砸场子", "🤣👕"]
+        },
+        view: {
+          comment: "这背后其实挺有意思的🧐 一件T恤花小钱办了件大事：品牌联动+话题营销+人设巩固",
+          bursts: ["品牌联动", "话题营销", "人设巩固"]
+        },
+        ask: {
+          comment: "想问一下这个T恤上印的是什么设计🤔 有其他友商晒出来的返图吗",
+          bursts: ["想追问", "设计细节", "返图吗"]
+        },
+        support: {
+          comment: "这波我站雷总👏 把互动做得体面又有梗，确实很会拿捏分寸",
+          bursts: ["体面", "有梗", "会拿捏"]
+        }
+      };
+      let usePressing = false;
+      let useActiveKey = null;
+      let useTypedKey = null;
+      let useTypeTimer = null;
+      let useArenaRect = null;
+      let usePressCenter = null;
+      let useTargets = [];
+
+      function setUseState(stateName) {
+        usePhone.classList.remove("use-state-idle", "use-state-orbit", "use-state-focus", "use-state-generate");
+        usePhone.classList.add(stateName);
+      }
+
+      function openUsePanel() {
+        usePhone.classList.add("is-panel-visible");
+        setUseState("use-state-idle");
+        useHint.textContent = "长按中心，滑向态度";
+      }
+
+      function resetUseActive() {
+        useActiveKey = null;
+        useTypedKey = null;
+        useOptions.forEach((option) => option.classList.remove("is-active"));
+      }
+
+      function cacheUseTargets() {
+        useArenaRect = useArena.getBoundingClientRect();
+        const pressRect = usePress.getBoundingClientRect();
+        usePressCenter = {
+          x: pressRect.left + pressRect.width / 2 - useArenaRect.left,
+          y: pressRect.top + pressRect.height / 2 - useArenaRect.top
+        };
+        useTargets = useOptions.map((option) => {
+          const rect = option.getBoundingClientRect();
+          return {
+            key: option.dataset.key,
+            x: rect.left + rect.width / 2 - useArenaRect.left,
+            y: rect.top + rect.height / 2 - useArenaRect.top
+          };
+        });
+      }
+
+      function spawnUseBarrage(tone) {
+        const offsets = [-28, 25, -4];
+        useBarrage.replaceChildren();
+        tone.bursts.forEach((text, index) => {
+          const chip = document.createElement("span");
+          chip.className = "onboard-use-chip";
+          chip.textContent = text;
+          chip.style.left = `${50 + offsets[index]}%`;
+          chip.style.setProperty("--delay", `${index * 90}ms`);
+          useBarrage.append(chip);
+        });
+      }
+
+      function typeUseComment(key) {
+        if (useTypedKey === key) return;
+        const tone = useTones[key];
+        if (!tone) return;
+        useTypedKey = key;
+        window.clearInterval(useTypeTimer);
+        useGeneratedText.textContent = "";
+        useGenerated.classList.add("is-visible");
+        spawnUseBarrage(tone);
+        let index = 0;
+        useTypeTimer = window.setInterval(() => {
+          useGeneratedText.textContent = tone.comment.slice(0, index);
+          index += 1;
+          if (index > tone.comment.length) {
+            window.clearInterval(useTypeTimer);
+          }
+        }, 28);
+      }
+
+      function setUseActive(key) {
+        if (!useTones[key]) return;
+        useActiveKey = key;
+        useOptions.forEach((option) => option.classList.toggle("is-active", option.dataset.key === key));
+        setUseState("use-state-focus");
+        useHint.textContent = "松手填入评论框";
+        typeUseComment(key);
+      }
+
+      function commitUseComment(key) {
+        const tone = useTones[key];
+        if (!tone) return;
+        window.clearInterval(useTypeTimer);
+        useGenerated.classList.add("is-visible");
+        useGeneratedText.textContent = tone.comment;
+        spawnUseBarrage(tone);
+        useInput.textContent = tone.comment;
+        useInput.classList.add("ready");
+        useSend.classList.add("is-ready");
+        useHint.textContent = "评论已填入，可以发送";
+        setUseState("use-state-generate");
+      }
+
+      function startUsePress(event) {
+        openUsePanel();
+        usePressing = true;
+        resetUseActive();
+        useGenerated.classList.remove("is-visible");
+        useGeneratedText.textContent = "";
+        useBarrage.replaceChildren();
+        setUseState("use-state-orbit");
+        usePress.textContent = "滑动中";
+        useHint.textContent = "滑向你的态度";
+        if (event.pointerId !== undefined && usePress.setPointerCapture) {
+          try {
+            usePress.setPointerCapture(event.pointerId);
+          } catch (error) {}
+        }
+        cacheUseTargets();
+      }
+
+      function chooseUseByPointer(event) {
+        if (!usePressing) return;
+        if (!useArenaRect || !usePressCenter || useTargets.length === 0) {
+          cacheUseTargets();
+        }
+        const x = event.clientX - useArenaRect.left;
+        const y = event.clientY - useArenaRect.top;
+        const dx = x - usePressCenter.x;
+        const dy = y - usePressCenter.y;
+        if (Math.hypot(dx, dy) < 58 && !useActiveKey) return;
+        const nearest = useTargets.reduce((closest, target) => {
+          const distance = Math.hypot(x - target.x, y - target.y);
+          return !closest || distance < closest.distance ? { key: target.key, distance } : closest;
+        }, null);
+        if (nearest && nearest.distance < 116) {
+          setUseActive(nearest.key);
+        }
+      }
+
+      function endUsePress(event) {
+        if (!usePressing) return;
+        usePressing = false;
+        if (usePress.releasePointerCapture && event?.pointerId !== undefined) {
+          try {
+            usePress.releasePointerCapture(event.pointerId);
+          } catch (error) {}
+        }
+        usePress.textContent = "按住";
+        if (useActiveKey) {
+          commitUseComment(useActiveKey);
+        } else {
+          setUseState("use-state-orbit");
+          useHint.textContent = "滑向或点选一个态度";
+        }
+      }
+
+      useInput.addEventListener("click", openUsePanel);
+      useInput.addEventListener("focus", openUsePanel);
+      usePress.addEventListener("pointerdown", startUsePress);
+      usePress.addEventListener("pointermove", chooseUseByPointer);
+      usePress.addEventListener("pointerup", endUsePress);
+      usePress.addEventListener("pointercancel", endUsePress);
+      window.addEventListener("pointermove", chooseUseByPointer);
+      window.addEventListener("pointerup", endUsePress);
+      window.addEventListener("pointercancel", endUsePress);
+      useOptions.forEach((option) => {
+        option.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          openUsePanel();
+          setUseActive(option.dataset.key);
+          usePressing = false;
+          usePress.textContent = "按住";
+          window.setTimeout(() => commitUseComment(option.dataset.key), 140);
+        });
+      });
+      useSend.addEventListener("click", () => {
+        if (!useSend.classList.contains("is-ready")) return;
+        useSend.textContent = "已发送";
+        stepText.textContent = stepLabels.complete;
+        useComplete.classList.add("is-visible");
+      });
+    }
+
+    initOnboardColdStart();
+
+    function initColdStart() {
+      return initOnboardColdStart();
+
+      const coldStart = document.getElementById("coldStart");
+      if (!coldStart) return;
+
+      const stages = [...coldStart.querySelectorAll("[data-boot-stage]")];
+      const stepEls = [...coldStart.querySelectorAll("[data-boot-step]")];
+      const stageOrder = ["scene", "quiz", "persona", "use"];
+      const quizEls = {
+        count: document.getElementById("bootQuizCount"),
+        title: document.getElementById("bootQuizTitle"),
+        tag: document.getElementById("bootScenarioTag"),
+        scenarioTitle: document.getElementById("bootScenarioTitle"),
+        scenarioCopy: document.getElementById("bootScenarioCopy"),
+        options: document.getElementById("bootOptions")
+      };
+      const personaEls = {
+        code: document.getElementById("bootPersonaCode"),
+        name: document.getElementById("bootPersonaName"),
+        desc: document.getElementById("bootPersonaDesc"),
+        emoji: document.getElementById("bootPersonaEmoji"),
+        catch: document.getElementById("bootPersonaCatch"),
+        length: document.getElementById("bootPersonaLength"),
+        focus: document.getElementById("bootPersonaFocus"),
+        cardName: document.getElementById("bootPersonaCardName"),
+        cardDesc: document.getElementById("bootPersonaCardDesc")
+      };
+
+      const quiz = [
+        {
+          tag: "追星",
+          title: "偶像发了一组旅行图，评论区已经开始刷屏。",
+          copy: "你刚刷到这组图，想表达喜欢，但又不想写得太用力。",
+          options: [
+            { text: "啊啊啊这组图也太会拍了吧，立夏快乐但我先被帅晕 😍", note: "外放、情绪强、偏长", score: [1, 1, 1, 1] },
+            { text: "好看，氛围感很足。", note: "克制、短打、偏观察", score: [-1, -1, -1, -1] },
+            { text: "这不是游记，这是行走的电影海报库存。", note: "玩梗、短句、偏认知", score: [1, 1, -1, -1] },
+            { text: "他镜头里的季节感很舒服，像把路上的风也拍进去了。", note: "内敛、长句、情绪细腻", score: [-1, -1, 1, 1] }
+          ]
+        },
+        {
+          tag: "搞笑",
+          title: "朋友把奶茶当咖啡带进会议，表情还很严肃。",
+          copy: "这条视频很好笑，但你会怎么接评论区的梗？",
+          options: [
+            { text: "这是打工人的新型续命仪式，领导看了都想点一杯 🤣", note: "外放、幽默、长句", score: [1, 1, 1, 1] },
+            { text: "笑死，灵魂是咖啡因，外壳是珍珠。", note: "幽默、短打、偏梗", score: [1, 1, -1, -1] },
+            { text: "这种反差挺真实的，越认真越好笑。", note: "克制、观察、短句", score: [-1, -1, -1, -1] },
+            { text: "我懂，开会前只要手里有杯东西，就觉得自己还能撑一下。", note: "共情、长句、情绪驱动", score: [-1, 1, 1, 1] }
+          ]
+        },
+        {
+          tag: "知识",
+          title: "一条科普视频解释：为什么睡前刷手机会影响入睡。",
+          copy: "内容有用，但评论区风格很杂，你会留下哪种评论？",
+          options: [
+            { text: "原来不是我自控力差，是大脑真的被蓝光骗醒了。", note: "情绪化理解、短句", score: [1, 1, -1, 1] },
+            { text: "这个解释很清楚，关键点是光照、奖励反馈和睡前兴奋度叠加。", note: "严肃、长句、认知驱动", score: [-1, -1, 1, -1] },
+            { text: "懂了，今晚继续刷，但会带着知识点刷。", note: "幽默、短打", score: [1, 1, -1, -1] },
+            { text: "收藏了，先从提前半小时放下手机开始试试。", note: "内敛、实用、短句", score: [-1, -1, -1, -1] }
+          ]
+        },
+        {
+          tag: "社会新闻",
+          title: "老小区加装电梯，低楼层和高楼层居民意见不一致。",
+          copy: "你想参与讨论，但不希望显得攻击性太强。",
+          options: [
+            { text: "这事不能只看谁更需要，也得看补偿和沟通机制有没有做到位。", note: "严肃、长句、认知驱动", score: [-1, -1, 1, -1] },
+            { text: "各有难处，别把邻里问题吵成输赢题。", note: "克制、短句、情绪调和", score: [-1, -1, -1, 1] },
+            { text: "建议先把方案摊开讲清楚，别让大家靠猜来做决定。", note: "直接、理性、短句", score: [1, -1, -1, -1] },
+            { text: "高楼层是生活便利，低楼层是权益感受，真正难的是怎么让两边都被看见。", note: "共情、长句", score: [-1, -1, 1, 1] }
+          ]
+        },
+        {
+          tag: "情感",
+          title: "异地恋情侣久别重逢，见面第一句话却只是“吃饭了吗”。",
+          copy: "这条内容很轻，但评论区很多人被戳中。",
+          options: [
+            { text: "最想念的人见到了，反而只会说最普通的话，太真实了 🥹", note: "情绪、长句、内敛", score: [-1, -1, 1, 1] },
+            { text: "嘴上吃饭了吗，心里其实是我好想你。", note: "短句、情感驱动", score: [-1, 1, -1, 1] },
+            { text: "成年人表达爱意：先确认对方有没有按时吃饭。", note: "幽默、认知、短句", score: [1, 1, -1, -1] },
+            { text: "这种关系最动人的地方，是两个人都把关心藏在日常细节里。", note: "严肃、长句、认知+情感", score: [-1, -1, 1, 1] }
+          ]
+        }
+      ];
+
+      const score = { expression: 0, humor: 0, length: 0, content: 0 };
+      let quizIndex = 0;
+      let quizLocked = false;
+
+      function showStage(stage) {
+        stages.forEach((item) => {
+          item.hidden = item.dataset.bootStage !== stage;
+        });
+        stepEls.forEach((item) => {
+          item.classList.toggle("is-active", item.dataset.bootStep === stage);
+        });
+      }
+
+      function resetScore() {
+        score.expression = 0;
+        score.humor = 0;
+        score.length = 0;
+        score.content = 0;
+      }
+
+      function renderQuestion() {
+        const question = quiz[quizIndex];
+        quizLocked = false;
+        quizEls.count.textContent = `${quizIndex + 1} / ${quiz.length}`;
+        quizEls.tag.textContent = question.tag;
+        quizEls.scenarioTitle.textContent = question.title;
+        quizEls.scenarioCopy.textContent = question.copy;
+        quizEls.options.replaceChildren();
+
+        question.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "boot-option";
+          button.innerHTML = `
+            <span class="boot-option-index">${String.fromCharCode(65 + index)}</span>
+            <span><strong>${option.text}</strong><span>${option.note}</span></span>
+          `;
+          button.addEventListener("click", () => chooseOption(button, option.score));
+          quizEls.options.append(button);
+        });
+      }
+
+      function chooseOption(button, selectedScore) {
+        if (quizLocked) return;
+        quizLocked = true;
+        button.classList.add("is-selected");
+        score.expression += selectedScore[0];
+        score.humor += selectedScore[1];
+        score.length += selectedScore[2];
+        score.content += selectedScore[3];
+
+        window.setTimeout(() => {
+          if (quizIndex < quiz.length - 1) {
+            quizIndex += 1;
+            renderQuestion();
+          } else {
+            renderPersona();
+            showStage("persona");
+          }
+        }, 360);
+      }
+
+      function personaName(code) {
+        const names = {
+          EHLF: "热场共情家",
+          EHBF: "弹幕气氛组",
+          EHLC: "长梗观察员",
+          EHBC: "快嘴梗王",
+          ESLF: "直球安利官",
+          ESBF: "真诚短评人",
+          ESLC: "认真补充者",
+          ESBC: "理性快评人",
+          IHLF: "轻梗共鸣者",
+          IHBF: "温柔玩梗人",
+          IHLC: "慢热观察员",
+          IHBC: "冷幽默短评人",
+          ISLF: "细腻共情者",
+          ISBF: "温柔短评人",
+          ISLC: "冷静观察员",
+          ISBC: "克制判断者"
+        };
+        return names[code] || "专属评论分身";
+      }
+
+      function renderPersona() {
+        const code = [
+          score.expression >= 0 ? "E" : "I",
+          score.humor >= 0 ? "H" : "S",
+          score.length >= 0 ? "L" : "B",
+          score.content >= 0 ? "F" : "C"
+        ].join("");
+        const isExpressive = code[0] === "E";
+        const isHumor = code[1] === "H";
+        const isLong = code[2] === "L";
+        const isFeeling = code[3] === "F";
+        const name = personaName(code);
+        const desc = [
+          isExpressive ? "你更愿意把第一反应说出来" : "你表达更克制，偏向留一点余地",
+          isHumor ? "喜欢用轻松的方式接住内容" : "更在意评论的准确和分寸",
+          isLong ? "愿意补充完整理由" : "偏好短句快速表态",
+          isFeeling ? "常从情绪和共鸣出发" : "常从观察和判断出发"
+        ].join("，") + "。";
+
+        personaEls.code.textContent = code;
+        personaEls.name.textContent = name;
+        personaEls.desc.textContent = desc;
+        personaEls.emoji.textContent = isFeeling
+          ? (isHumor ? "😂 😍 🥹 ✨" : "🥹 ✨ ❤️ 📌")
+          : (isHumor ? "🤣 🧐 👍 👀" : "👍 🧐 📌 ✅");
+        personaEls.catch.textContent = isHumor
+          ? "“有点东西”“笑死但合理”"
+          : (isFeeling ? "“我懂”“太真实了”" : "“关键在于”“这点挺重要”");
+        personaEls.length.textContent = isLong ? "会生成更完整的半长句，默认带一点原因。" : "会优先生成短评，必要时只补一个重点。";
+        personaEls.focus.textContent = isFeeling ? "先表达情绪和共鸣，再收住语气。" : "先抓内容观点，再补充判断依据。";
+        personaEls.cardName.textContent = name;
+        personaEls.cardDesc.textContent = `人格代码 ${code}：${desc}`;
+      }
+
+      function startQuiz() {
+        resetScore();
+        quizIndex = 0;
+        renderQuestion();
+        showStage("quiz");
+      }
+
+      document.getElementById("bootStartQuiz").addEventListener("click", startQuiz);
+      document.getElementById("bootRestartQuiz").addEventListener("click", startQuiz);
+      document.getElementById("bootSkipToUse").addEventListener("click", () => showStage("use"));
+      document.getElementById("bootConfirmPersona").addEventListener("click", () => showStage("use"));
+      document.getElementById("bootGoExamples").addEventListener("click", () => {
+        document.querySelector(".main-band")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      const livePhone = document.getElementById("bootLivePhone");
+      const liveInput = document.getElementById("bootLiveInput");
+      const livePress = document.getElementById("bootLivePress");
+      const liveOptions = [...document.querySelectorAll(".boot-live-option")];
+      const liveGenerated = document.getElementById("bootLiveGenerated");
+      const liveSend = document.getElementById("bootLiveSend");
+      const liveHint = document.getElementById("bootUseHint");
+      const liveComplete = document.getElementById("bootLiveComplete");
+      const liveTones = {
+        agree: "这波确实挺会的👍 既有话题，也把互动氛围做起来了。",
+        fun: "友商：谢谢雷总，发布会穿不穿这件成了新悬念 🤣",
+        ask: "想问下这件 T 恤上的设计是什么，后面有友商返图吗 🤔"
+      };
+      let livePressing = false;
+      let liveActiveKey = null;
+      let liveArenaRect = null;
+      let livePressCenter = null;
+      let liveTargets = [];
+      let liveTypeTimer = null;
+
+      function cacheLiveTargets() {
+        const arena = document.getElementById("bootLiveArena");
+        liveArenaRect = arena.getBoundingClientRect();
+        const pressRect = livePress.getBoundingClientRect();
+        livePressCenter = {
+          x: pressRect.left + pressRect.width / 2 - liveArenaRect.left,
+          y: pressRect.top + pressRect.height / 2 - liveArenaRect.top
+        };
+        liveTargets = liveOptions.map((item) => {
+          const rect = item.getBoundingClientRect();
+          return {
+            key: item.dataset.key,
+            x: rect.left + rect.width / 2 - liveArenaRect.left,
+            y: rect.top + rect.height / 2 - liveArenaRect.top
+          };
+        });
+      }
+
+      function setLiveActive(key) {
+        liveActiveKey = key;
+        liveOptions.forEach((item) => item.classList.toggle("is-active", item.dataset.key === key));
+        liveHint.textContent = "松手填入评论框";
+      }
+
+      function resetLiveActive() {
+        liveActiveKey = null;
+        liveOptions.forEach((item) => item.classList.remove("is-active"));
+      }
+
+      function typeLiveComment(text) {
+        window.clearInterval(liveTypeTimer);
+        liveGenerated.textContent = "AI 生成：";
+        liveGenerated.classList.add("is-visible");
+        liveInput.classList.add("is-filled");
+        liveInput.textContent = text;
+        liveSend.classList.add("is-ready");
+        let index = 0;
+        liveTypeTimer = window.setInterval(() => {
+          liveGenerated.textContent = `AI 生成：${text.slice(0, index)}`;
+          index += 1;
+          if (index > text.length) {
+            window.clearInterval(liveTypeTimer);
+          }
+        }, 34);
+      }
+
+      function startLivePress(event) {
+        if (!livePhone.classList.contains("is-panel-visible")) {
+          livePhone.classList.add("is-panel-visible");
+        }
+        livePressing = true;
+        resetLiveActive();
+        livePhone.classList.add("is-pressing");
+        livePress.textContent = "按住中";
+        liveHint.textContent = "滑向你的态度";
+        if (event.pointerId !== undefined && livePress.setPointerCapture) {
+          try {
+            livePress.setPointerCapture(event.pointerId);
+          } catch (error) {}
+        }
+        cacheLiveTargets();
+      }
+
+      function chooseLiveByPointer(event) {
+        if (!livePressing) return;
+        if (!liveArenaRect || !livePressCenter || liveTargets.length === 0) {
+          cacheLiveTargets();
+        }
+        const x = event.clientX - liveArenaRect.left;
+        const y = event.clientY - liveArenaRect.top;
+        const dx = x - livePressCenter.x;
+        const dy = y - livePressCenter.y;
+        if (Math.hypot(dx, dy) < 56 && !liveActiveKey) return;
+        const nearest = liveTargets.reduce((closest, target) => {
+          const distance = Math.hypot(x - target.x, y - target.y);
+          return !closest || distance < closest.distance ? { key: target.key, distance } : closest;
+        }, null);
+        if (nearest && nearest.distance < 116) {
+          setLiveActive(nearest.key);
+        }
+      }
+
+      function endLivePress(event) {
+        if (!livePressing) return;
+        livePressing = false;
+        if (livePress.releasePointerCapture && event?.pointerId !== undefined) {
+          try {
+            livePress.releasePointerCapture(event.pointerId);
+          } catch (error) {}
+        }
+        livePress.textContent = "按住";
+        if (liveActiveKey) {
+          livePhone.classList.remove("is-pressing");
+          typeLiveComment(liveTones[liveActiveKey]);
+          liveHint.textContent = "评论已填入，可以发送";
+        } else {
+          livePhone.classList.add("is-pressing");
+          liveHint.textContent = "滑向或点选一个态度";
+        }
+      }
+
+      liveInput.addEventListener("click", () => {
+        livePhone.classList.add("is-panel-visible");
+        liveHint.textContent = "看到想评论的内容？长按这里，滑向你的态度。";
+      });
+      livePress.addEventListener("pointerdown", startLivePress);
+      livePress.addEventListener("pointermove", chooseLiveByPointer);
+      livePress.addEventListener("pointerup", endLivePress);
+      livePress.addEventListener("pointercancel", endLivePress);
+      window.addEventListener("pointermove", chooseLiveByPointer);
+      window.addEventListener("pointerup", endLivePress);
+      window.addEventListener("pointercancel", endLivePress);
+      liveOptions.forEach((option) => {
+        option.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          if (!livePhone.classList.contains("is-panel-visible")) {
+            livePhone.classList.add("is-panel-visible");
+          }
+          setLiveActive(option.dataset.key);
+          typeLiveComment(liveTones[option.dataset.key]);
+          livePhone.classList.remove("is-pressing");
+          livePressing = false;
+          liveHint.textContent = "评论已填入，可以发送";
+        });
+      });
+      liveSend.addEventListener("click", () => {
+        if (!liveSend.classList.contains("is-ready")) return;
+        liveSend.textContent = "已发送";
+        liveComplete.classList.add("is-visible");
+      });
+    }
+
+    initColdStart();
+
+    const phone = document.getElementById("demoPhone");
+    const pressButton = document.getElementById("pressButton");
+    const pressText = document.getElementById("pressText");
+    const hintText = document.getElementById("hintText");
+    const selectedFace = document.getElementById("selectedFace");
+    const generatedText = document.getElementById("generatedText");
+    const voiceTranscript = document.getElementById("voiceTranscript");
+    const generationCard = document.getElementById("generationCard");
+    const emotionRay = document.getElementById("emotionRay");
+    const emotionBarrage = document.getElementById("emotionBarrage");
+    const commentInput = document.getElementById("commentInput");
+    const sendButton = document.getElementById("sendButton");
+    const modeButton = document.getElementById("modeButton");
+    const attitudeEls = [...document.querySelectorAll(".attitude")];
+    const keyEls = [...document.querySelectorAll(".key")];
+
+    const attitudes = {
+      funny: {
+        face: "😍",
+        label: "被帅到",
+        hint: "粉丝口吻夸外貌、气质、照片氛围",
+        comment: "这个男人随便拍两张都是电影海报质感😍💕 立夏快乐，但你是不是太帅了 (≧∀≦)ゞ",
+        bursts: ["电影海报感", "太帅了", "😍 被击中"]
+      },
+      shock: {
+        face: "🔥",
+        label: "终于更了",
+        hint: "短句连发，表达看到新动态的兴奋",
+        comment: "终于更新了！！！🔥🔥🔥 失踪人口回归 \\(≧▽≦)/",
+        bursts: ["终于更新了！！！", "🔥🔥🔥", "失踪人口回归"]
+      },
+      team: {
+        face: "🤣",
+        label: "催更一下",
+        hint: "接住评论区催更队形，用幽默方式催更",
+        comment: "哥，游记写了，那剧本看了吗 🤣 庆余年3的进度条能不能动一动 💀",
+        bursts: ["剧本看了吗", "进度条动一动", "🤣 催更一下"]
+      },
+      soft: {
+        face: "📌",
+        label: "认真安利",
+        hint: "用路人视角安利张若昀的作品和魅力",
+        comment: "路人入坑指南📌：庆余年入坑→雪中悍刀行上头→法医秦明躺平，欢迎新朋友 ✨",
+        bursts: ["入坑指南", "作品线拉满", "📌 安利成功"]
+      }
+    };
+
+    const voiceInput = {
+      key: "voice",
+      label: "语音输入",
+      hint: "自由说，松手后转成文字",
+      transcript: "我刚刚点进去看图，真的有电影海报那味了，张若昀很会拍。"
+    };
+
+    let activeKey = null;
+    let isPressing = false;
+    let focusTimer = null;
+    let generateTimer = null;
+    let typeTimer = null;
+    let voiceTimer = null;
+    let barrageTimer = null;
+    let barrageRunId = 0;
+    let cachedArenaRect = null;
+    let cachedPressCenter = null;
+    let cachedTargets = [];
+
+    function setStage(stage) {
+      phone.classList.remove("state-idle", "state-orbit", "state-focus", "state-voice", "state-generate", "state-keyboard", "state-sent");
+      phone.classList.add(`state-${stage}`);
+    }
+
+    function setActive(key) {
+      if (activeKey === key) return;
+
+      activeKey = key;
+      attitudeEls.forEach((el) => el.classList.toggle("active", el.dataset.key === key));
+
+      if (key === voiceInput.key) {
+        window.clearTimeout(generateTimer);
+        window.clearInterval(typeTimer);
+        clearBarrage();
+        delete phone.dataset.tone;
+        selectedFace.textContent = "";
+        hintText.textContent = voiceInput.hint;
+        pressText.textContent = "松手转文字";
+        generationCard.classList.remove("emotion-hit");
+        generationCard.classList.add("visible", "voice-mode");
+        setStage("voice");
+        startVoiceInput();
+        return;
+      }
+
+      const item = attitudes[key];
+      const wasGenerating = phone.classList.contains("state-generate");
+      phone.dataset.tone = key;
+      generationCard.classList.remove("voice-mode", "emotion-hit");
+      if (!wasGenerating) {
+        generationCard.classList.remove("visible");
+      }
+      window.clearInterval(voiceTimer);
+      selectedFace.textContent = item.face;
+      if (isPressing) {
+        if (!wasGenerating) {
+          setStage("focus");
+        }
+        hintText.textContent = item.hint;
+        window.clearTimeout(generateTimer);
+        generateTimer = window.setTimeout(() => {
+          if (!isPressing || activeKey !== key) return;
+          setStage("generate");
+          pressText.textContent = "松手入框";
+          startTyping(item.comment, key);
+        }, wasGenerating ? 80 : 420);
+      }
+    }
+
+    function resetSelection() {
+      activeKey = null;
+      attitudeEls.forEach((el) => el.classList.remove("active"));
+      selectedFace.textContent = "";
+      generatedText.textContent = "";
+      voiceTranscript.textContent = "正在听你说话...";
+      generationCard.classList.remove("visible", "voice-mode", "emotion-hit");
+      emotionRay.classList.remove("active");
+      pressButton.classList.remove("hit-pulse");
+      delete phone.dataset.tone;
+      clearBarrage();
+    }
+
+    function clearTimers() {
+      window.clearTimeout(focusTimer);
+      window.clearTimeout(generateTimer);
+      window.clearInterval(typeTimer);
+      window.clearInterval(voiceTimer);
+      window.clearInterval(barrageTimer);
+    }
+
+    function clearBarrage() {
+      barrageRunId += 1;
+      window.clearInterval(barrageTimer);
+      emotionBarrage.replaceChildren();
+    }
+
+    function cacheHitZones() {
+      cachedArenaRect = document.getElementById("arena").getBoundingClientRect();
+      const pressRect = pressButton.getBoundingClientRect();
+      cachedPressCenter = {
+        x: pressRect.left + pressRect.width / 2 - cachedArenaRect.left,
+        y: pressRect.top + pressRect.height / 2 - cachedArenaRect.top
+      };
+      cachedTargets = attitudeEls.map((el) => {
+        const rect = el.getBoundingClientRect();
+        return {
+          key: el.dataset.key,
+          x: rect.left + rect.width / 2 - cachedArenaRect.left,
+          y: rect.top + rect.height / 2 - cachedArenaRect.top
+        };
+      });
+    }
+
+    function enterKeyboardMode() {
+      isPressing = false;
+      clearTimers();
+      resetSelection();
+      commentInput.classList.add("editing");
+      generationCard.classList.remove("visible", "voice-mode");
+      pressText.textContent = "按住";
+      hintText.textContent = "我准备好了...";
+      modeButton.textContent = "切换";
+      setStage("keyboard");
+    }
+
+    function enterGenerateMode() {
+      clearTimers();
+      commentInput.classList.remove("editing");
+      generationCard.classList.remove("visible", "voice-mode");
+      pressText.textContent = "按住";
+      hintText.textContent = "我准备好了...";
+      resetSelection();
+      setStage("idle");
+    }
+
+    function ensureEditableText() {
+      if (commentInput.classList.contains("placeholder")) {
+        commentInput.classList.remove("placeholder");
+        commentInput.textContent = "";
+      }
+    }
+
+    function syncSendState() {
+      const hasText = commentInput.textContent.trim().length > 0;
+      sendButton.classList.toggle("ready", hasText);
+      if (!hasText) {
+        commentInput.classList.add("placeholder");
+        commentInput.textContent = "让大家听到你的声音";
+      }
+    }
+
+    function editComment(key) {
+      ensureEditableText();
+      if (key === "backspace") {
+        commentInput.textContent = commentInput.textContent.slice(0, -1);
+      } else if (key === "space") {
+        commentInput.textContent += " ";
+      } else if (key === "shift") {
+        commentInput.textContent += "";
+      } else {
+        commentInput.textContent += key;
+      }
+      syncSendState();
+      if (!commentInput.classList.contains("placeholder")) {
+        commentInput.classList.add("editing");
+      }
+    }
+
+    function retriggerClass(el, className) {
+      el.classList.remove(className);
+      void el.offsetWidth;
+      el.classList.add(className);
+    }
+
+    function playEmotionHit(key) {
+      phone.dataset.tone = key;
+      generationCard.classList.add("visible");
+      retriggerClass(generationCard, "emotion-hit");
+      retriggerClass(pressButton, "hit-pulse");
+      retriggerClass(emotionRay, "active");
+      window.setTimeout(() => {
+        pressButton.classList.remove("hit-pulse");
+        emotionRay.classList.remove("active");
+      }, 840);
+    }
+
+    function spawnBarrageChip(text, index) {
+      const lanes = [
+        { dx: "-68px", midDy: "-52px", dy: "-74px", rotate: "-5deg" },
+        { dx: "58px", midDy: "-62px", dy: "-88px", rotate: "4deg" },
+        { dx: "-8px", midDy: "-46px", dy: "-64px", rotate: "-1deg" },
+        { dx: "86px", midDy: "-56px", dy: "-78px", rotate: "5deg" },
+        { dx: "-92px", midDy: "-66px", dy: "-92px", rotate: "-4deg" },
+        { dx: "22px", midDy: "-74px", dy: "-104px", rotate: "2deg" }
+      ];
+      const lane = lanes[index % lanes.length];
+      const chip = document.createElement("span");
+      chip.className = "barrage-chip";
+      chip.textContent = text;
+      chip.style.setProperty("--dx", lane.dx);
+      chip.style.setProperty("--mid-dy", lane.midDy);
+      chip.style.setProperty("--dy", lane.dy);
+      chip.style.setProperty("--rotate", lane.rotate);
+      chip.addEventListener("animationend", () => chip.remove(), { once: true });
+      emotionBarrage.append(chip);
+      while (emotionBarrage.children.length > 4) {
+        emotionBarrage.firstElementChild?.remove();
+      }
+    }
+
+    function startBarrage(key) {
+      clearBarrage();
+      const runId = barrageRunId;
+      const fragments = attitudes[key]?.bursts || [];
+      if (!fragments.length) return;
+
+      let index = 0;
+      spawnBarrageChip(fragments[index % fragments.length], index);
+      index += 1;
+      barrageTimer = window.setInterval(() => {
+        if (!isPressing || activeKey !== key || barrageRunId !== runId || index >= 6) {
+          window.clearInterval(barrageTimer);
+          return;
+        }
+        spawnBarrageChip(fragments[index % fragments.length], index);
+        index += 1;
+      }, 410);
+    }
+
+    function startTyping(text, key) {
+      window.clearInterval(typeTimer);
+      playEmotionHit(key);
+      startBarrage(key);
+      generatedText.textContent = "";
+      let index = 0;
+      typeTimer = window.setInterval(() => {
+        generatedText.textContent = text.slice(0, index);
+        index += 1;
+        if (index > text.length) {
+          window.clearInterval(typeTimer);
+        }
+      }, 46);
+    }
+
+    function startVoiceInput() {
+      window.clearInterval(voiceTimer);
+      voiceTranscript.textContent = "正在听你说话...";
+      let index = 0;
+      voiceTimer = window.setInterval(() => {
+        voiceTranscript.textContent = voiceInput.transcript.slice(0, index) || "正在听你说话...";
+        index += 1;
+        if (index > voiceInput.transcript.length) {
+          window.clearInterval(voiceTimer);
+        }
+      }, 38);
+    }
+
+    function startPress(event) {
+      isPressing = true;
+      if (event.pointerId !== undefined && pressButton.setPointerCapture) {
+        try {
+          pressButton.setPointerCapture(event.pointerId);
+        } catch (error) {}
+      }
+      clearTimers();
+      generationCard.classList.remove("visible", "emotion-hit");
+      commentInput.classList.remove("editing");
+      pressText.textContent = "按住中";
+      hintText.textContent = "滑向态度生成，滑向语音输入";
+      resetSelection();
+      setStage("orbit");
+      cacheHitZones();
+    }
+
+    function endPress(event) {
+      if (!isPressing) return;
+      isPressing = false;
+      if (pressButton.releasePointerCapture && event?.pointerId !== undefined) {
+        try {
+          pressButton.releasePointerCapture(event.pointerId);
+        } catch (error) {}
+      }
+      clearTimers();
+      if (!activeKey) {
+        clearBarrage();
+        pressText.textContent = "按住";
+        hintText.textContent = "我准备好了...";
+        setStage("idle");
+        return;
+      }
+      const finalComment = activeKey === voiceInput.key ? voiceInput.transcript : attitudes[activeKey].comment;
+      commentInput.classList.remove("placeholder");
+      commentInput.textContent = finalComment;
+      sendButton.classList.add("ready");
+      generatedText.textContent = finalComment;
+      pressText.textContent = "按住";
+      hintText.textContent = activeKey === voiceInput.key ? "语音已转文字" : "已放入评论框";
+      generationCard.classList.remove("visible", "voice-mode", "emotion-hit");
+      emotionRay.classList.remove("active");
+      pressButton.classList.remove("hit-pulse");
+      clearBarrage();
+      setStage("sent");
+      window.setTimeout(() => {
+        if (!isPressing) {
+          setStage("idle");
+          hintText.textContent = "我准备好了...";
+          commentInput.classList.remove("editing");
+        }
+      }, 1400);
+    }
+
+    function chooseByPointer(event) {
+      if (!isPressing) return;
+      if (!cachedArenaRect || !cachedPressCenter || cachedTargets.length === 0) {
+        cacheHitZones();
+      }
+
+      const x = event.clientX - cachedArenaRect.left;
+      const y = event.clientY - cachedArenaRect.top;
+      const dx = x - cachedPressCenter.x;
+      const dy = y - cachedPressCenter.y;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < 72 && !activeKey) return;
+
+      const nearest = cachedTargets.reduce((closest, target) => {
+        const attitudeDistance = Math.hypot(x - target.x, y - target.y);
+
+        if (!closest || attitudeDistance < closest.distance) {
+          return { key: target.key, distance: attitudeDistance };
+        }
+
+        return closest;
+      }, null);
+
+      if (!nearest) return;
+
+      if (!activeKey && nearest.distance < 106) {
+        setActive(nearest.key);
+        return;
+      }
+
+      const current = cachedTargets.find((target) => target.key === activeKey);
+      const currentDistance = current ? Math.hypot(x - current.x, y - current.y) : Infinity;
+      const hasClearerTarget = nearest.key !== activeKey
+        && nearest.distance < 92
+        && nearest.distance + 18 < currentDistance;
+
+      if (hasClearerTarget) {
+        setActive(nearest.key);
+      }
+    }
+
+    pressButton.addEventListener("pointerdown", startPress);
+    pressButton.addEventListener("pointermove", chooseByPointer);
+    pressButton.addEventListener("pointerup", endPress);
+    pressButton.addEventListener("pointercancel", endPress);
+    window.addEventListener("pointermove", chooseByPointer);
+    window.addEventListener("pointerup", endPress);
+    window.addEventListener("pointercancel", endPress);
+
+    commentInput.addEventListener("click", enterKeyboardMode);
+    commentInput.addEventListener("focus", enterKeyboardMode);
+
+    modeButton.addEventListener("click", () => {
+      if (phone.classList.contains("state-keyboard")) {
+        enterGenerateMode();
+      } else {
+        enterKeyboardMode();
+      }
+    });
+
+    keyEls.forEach((key) => {
+      key.addEventListener("click", () => editComment(key.dataset.key));
+    });
+
+    attitudeEls.forEach((el) => {
+      el.addEventListener("pointerdown", (event) => {
+        startPress(event);
+        setActive(el.dataset.key);
+      });
+    });
+
+    function initLeiCasePrototype() {
+      const leiPhone = document.getElementById("leiPhone");
+      if (!leiPhone) return;
+
+      const leiPress = document.getElementById("leiPress");
+      const leiHint = document.getElementById("leiHint");
+      const leiComment = document.getElementById("leiComment");
+      const leiSend = document.getElementById("leiSend");
+      const leiModeButton = document.getElementById("leiModeButton");
+      const leiGenCard = document.getElementById("leiGenCard");
+      const leiGenText = document.getElementById("leiGenText");
+      const leiBarrage = document.getElementById("leiBarrage");
+      const leiOptions = [...document.querySelectorAll(".case-option")];
+      const leiKeys = [...document.querySelectorAll(".case-key")];
+      const leiPlaceholder = "说点什么...";
+
+      const leiAttitudes = {
+        score: {
+          face: "👍",
+          label: "这波满分",
+          hint: "夸赞商业操作，带赞叹语气",
+          comment: "雷总这波营销真的绝了👍 一件T恤把友商人情做满，流量也赚满了",
+          bursts: ["营销绝了", "人情做满", "流量赚满"]
+        },
+        fun: {
+          face: "🤣",
+          label: "太好笑了",
+          hint: "拿“送T恤”做文章，幽默调侃",
+          comment: "友商：谢谢雷总的T恤，下次发布会穿它来砸场子 🤣👕",
+          bursts: ["谢谢雷总", "穿它砸场子", "🤣 玩梗到位"]
+        },
+        view: {
+          face: "🧐",
+          label: "提供视角",
+          hint: "理性分析这次行为的商业含义",
+          comment: "这背后其实挺有意思的🧐 一件T恤花小钱办了件大事：品牌联动+话题营销+人设巩固",
+          bursts: ["品牌联动", "话题营销", "人设巩固"]
+        },
+        ask: {
+          face: "🤔",
+          label: "我想追问",
+          hint: "对车展或雷军行为的具体提问",
+          comment: "想问一下这个T恤上印的是什么设计🤔 有其他友商晒出来的返图吗",
+          bursts: ["什么设计", "有返图吗", "🤔 想看细节"]
+        },
+        support: {
+          face: "👏",
+          label: "支持",
+          hint: "表达对国产汽车抱团发展的认同",
+          comment: "不管怎么说，国产汽车这几家一起往前走的感觉真好👏 消费者是最终受益的",
+          bursts: ["一起往前走", "国产车加油", "👏 支持"]
+        }
+      };
+
+      let leiActiveKey = null;
+      let leiPressing = false;
+      let leiGenerateTimer = null;
+      let leiTypeTimer = null;
+      let leiBarrageTimer = null;
+      let leiBarrageRun = 0;
+      let leiArenaRect = null;
+      let leiPressCenter = null;
+      let leiTargets = [];
+
+      function setLeiStage(stage) {
+        leiPhone.classList.remove("case-state-idle", "case-state-orbit", "case-state-focus", "case-state-generate", "case-state-keyboard", "case-state-sent");
+        leiPhone.classList.add(`case-state-${stage}`);
+      }
+
+      function clearLeiBarrage() {
+        leiBarrageRun += 1;
+        window.clearInterval(leiBarrageTimer);
+        leiBarrage.replaceChildren();
+      }
+
+      function clearLeiTimers() {
+        window.clearTimeout(leiGenerateTimer);
+        window.clearInterval(leiTypeTimer);
+        window.clearInterval(leiBarrageTimer);
+      }
+
+      function resetLeiSelection() {
+        leiActiveKey = null;
+        leiOptions.forEach((el) => el.classList.remove("active"));
+        leiGenText.textContent = "";
+        leiGenCard.classList.remove("visible", "case-hit");
+        leiPress.classList.remove("case-hit-pulse");
+        clearLeiBarrage();
+      }
+
+      function cacheLeiHitZones() {
+        const arena = document.getElementById("leiArena");
+        leiArenaRect = arena.getBoundingClientRect();
+        const pressRect = leiPress.getBoundingClientRect();
+        leiPressCenter = {
+          x: pressRect.left + pressRect.width / 2 - leiArenaRect.left,
+          y: pressRect.top + pressRect.height / 2 - leiArenaRect.top
+        };
+        leiTargets = leiOptions.map((el) => {
+          const rect = el.getBoundingClientRect();
+          return {
+            key: el.dataset.key,
+            x: rect.left + rect.width / 2 - leiArenaRect.left,
+            y: rect.top + rect.height / 2 - leiArenaRect.top
+          };
+        });
+      }
+
+      function retriggerLeiClass(el, className) {
+        el.classList.remove(className);
+        void el.offsetWidth;
+        el.classList.add(className);
+      }
+
+      function spawnLeiBarrageChip(text, index) {
+        const lanes = [
+          { dx: "-72px", midDy: "-46px", dy: "-66px", rotate: "-5deg" },
+          { dx: "60px", midDy: "-58px", dy: "-82px", rotate: "4deg" },
+          { dx: "-4px", midDy: "-42px", dy: "-60px", rotate: "-1deg" },
+          { dx: "88px", midDy: "-50px", dy: "-72px", rotate: "5deg" },
+          { dx: "-96px", midDy: "-62px", dy: "-88px", rotate: "-4deg" }
+        ];
+        const lane = lanes[index % lanes.length];
+        const chip = document.createElement("span");
+        chip.className = "case-barrage-chip";
+        chip.textContent = text;
+        chip.style.setProperty("--dx", lane.dx);
+        chip.style.setProperty("--mid-dy", lane.midDy);
+        chip.style.setProperty("--dy", lane.dy);
+        chip.style.setProperty("--rotate", lane.rotate);
+        chip.addEventListener("animationend", () => chip.remove(), { once: true });
+        leiBarrage.append(chip);
+        while (leiBarrage.children.length > 4) {
+          leiBarrage.firstElementChild?.remove();
+        }
+      }
+
+      function startLeiBarrage(key) {
+        clearLeiBarrage();
+        const runId = leiBarrageRun;
+        const fragments = leiAttitudes[key]?.bursts || [];
+        if (!fragments.length) return;
+
+        let index = 0;
+        spawnLeiBarrageChip(fragments[index % fragments.length], index);
+        index += 1;
+        leiBarrageTimer = window.setInterval(() => {
+          if (!leiPressing || leiActiveKey !== key || leiBarrageRun !== runId || index >= 6) {
+            window.clearInterval(leiBarrageTimer);
+            return;
+          }
+          spawnLeiBarrageChip(fragments[index % fragments.length], index);
+          index += 1;
+        }, 410);
+      }
+
+      function startLeiTyping(text, key) {
+        window.clearInterval(leiTypeTimer);
+        leiGenCard.classList.add("visible");
+        retriggerLeiClass(leiGenCard, "case-hit");
+        retriggerLeiClass(leiPress, "case-hit-pulse");
+        window.setTimeout(() => leiPress.classList.remove("case-hit-pulse"), 720);
+        startLeiBarrage(key);
+
+        leiGenText.textContent = "";
+        let index = 0;
+        leiTypeTimer = window.setInterval(() => {
+          leiGenText.textContent = text.slice(0, index);
+          index += 1;
+          if (index > text.length) {
+            window.clearInterval(leiTypeTimer);
+          }
+        }, 42);
+      }
+
+      function setLeiActive(key) {
+        if (leiActiveKey === key) return;
+        leiActiveKey = key;
+        leiOptions.forEach((el) => el.classList.toggle("active", el.dataset.key === key));
+
+        const item = leiAttitudes[key];
+        if (!item) return;
+
+        const wasGenerating = leiPhone.classList.contains("case-state-generate");
+        if (!wasGenerating) {
+          leiGenCard.classList.remove("visible");
+          setLeiStage("focus");
+        }
+        leiHint.textContent = item.hint;
+        window.clearTimeout(leiGenerateTimer);
+        leiGenerateTimer = window.setTimeout(() => {
+          if (!leiPressing || leiActiveKey !== key) return;
+          setLeiStage("generate");
+          leiPress.textContent = "松手入框";
+          startLeiTyping(item.comment, key);
+        }, wasGenerating ? 80 : 360);
+      }
+
+      function startLeiPress(event) {
+        leiPressing = true;
+        if (event.pointerId !== undefined && leiPress.setPointerCapture) {
+          try {
+            leiPress.setPointerCapture(event.pointerId);
+          } catch (error) {}
+        }
+        clearLeiTimers();
+        resetLeiSelection();
+        leiComment.classList.remove("editing");
+        leiPress.textContent = "按住中";
+        leiHint.textContent = "滑向一个表态";
+        setLeiStage("orbit");
+        cacheLeiHitZones();
+      }
+
+      function endLeiPress(event) {
+        if (!leiPressing) return;
+        leiPressing = false;
+        if (leiPress.releasePointerCapture && event?.pointerId !== undefined) {
+          try {
+            leiPress.releasePointerCapture(event.pointerId);
+          } catch (error) {}
+        }
+        clearLeiTimers();
+
+        if (!leiActiveKey) {
+          clearLeiBarrage();
+          leiPress.textContent = "按住";
+          leiHint.textContent = "我准备好了...";
+          setLeiStage("idle");
+          return;
+        }
+
+        const finalComment = leiAttitudes[leiActiveKey].comment;
+        leiComment.textContent = finalComment;
+        leiComment.classList.add("ready");
+        leiSend.classList.add("ready");
+        leiGenText.textContent = finalComment;
+        leiPress.textContent = "按住";
+        leiHint.textContent = "已放入评论框";
+        leiGenCard.classList.remove("visible", "case-hit");
+        leiPress.classList.remove("case-hit-pulse");
+        clearLeiBarrage();
+        setLeiStage("sent");
+        window.setTimeout(() => {
+          if (!leiPressing) {
+            setLeiStage("idle");
+            leiHint.textContent = "我准备好了...";
+            leiComment.classList.remove("editing");
+          }
+        }, 1200);
+      }
+
+      function chooseLeiByPointer(event) {
+        if (!leiPressing) return;
+        if (!leiArenaRect || !leiPressCenter || leiTargets.length === 0) {
+          cacheLeiHitZones();
+        }
+
+        const x = event.clientX - leiArenaRect.left;
+        const y = event.clientY - leiArenaRect.top;
+        const dx = x - leiPressCenter.x;
+        const dy = y - leiPressCenter.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < 72 && !leiActiveKey) return;
+
+        const nearest = leiTargets.reduce((closest, target) => {
+          const optionDistance = Math.hypot(x - target.x, y - target.y);
+          if (!closest || optionDistance < closest.distance) {
+            return { key: target.key, distance: optionDistance };
+          }
+          return closest;
+        }, null);
+
+        if (!nearest) return;
+
+       
